@@ -463,6 +463,11 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
           <span class="hint">Opent in een nieuw tabblad. Standaardadres: <code>http://ui-mixer.io</code> of het IP van de mixer (bv. <code>http://10.10.1.1</code>).</span>
         </div>
       </div>
+      <div class="panel" style="margin-top:14px">
+        <div class="sectiontitle">Toe te passen in de Ui12 — uit je meting</div>
+        <p class="hint" style="margin:.2em 0 10px">Dial deze met de hand in op de open mixer-tab. Alles cuts-only en breed; beoordeel op gehoor en noteer wat je wijzigt.</p>
+        <div id="mix-apply"><p class="hint" style="margin:0">Nog niets gemeten. Doe op het dashboard stap 2 (zaal) en stap 3 (microfoon) — dan reken ik hier concrete start-waardes uit.</p></div>
+      </div>
       <div class="warnbox" style="margin-top:14px"><b>Waarom niet ingebouwd?</b> — de Ui12 draait op <code>http://</code> in je lokale netwerk. Een beveiligde (<code>https</code>) webpagina mag zo'n onbeveiligde pagina niet in een frame tonen of aansturen (mixed-content-blokkade van de browser). Daarom opent de mixer in een eigen tabblad. Automatisch meeschrijven kan alleen via de latere native iPad-app of een lokale brug — zie mijn toelichting in de chat.</div>
     </section>
   </main>
@@ -933,6 +938,41 @@ function renderVocalPreset(){
   if(src) src.textContent='uit mic-scan';
 }
 
+function renderMixApply(){
+  const wrap=$('#mix-apply'); if(!wrap) return;
+  const {sugg}=suggestions();
+  let html='';
+  // Grafische EQ (zaalmeting)
+  html+='<div class="sectiontitle" style="margin:0 0 6px">Grafische EQ (zaal)</div>';
+  if(!positions.length){
+    html+='<div class="kv"><span class="k">Zaal-cuts</span><span class="v">meet eerst zaalposities (stap 2)</span></div>';
+  } else if(!sugg.length){
+    html+='<div class="kv"><span class="k">Zaal-cuts</span><span class="v">geen — curve zit al vlak, op gehoor bijsturen</span></div>';
+  } else {
+    sugg.forEach(s=>{ html+='<div class="kv"><span class="k">GEQ '+fmtHz(s.hz)+' Hz</span><span class="v">'+s.cut.toFixed(1)+' dB &nbsp;<span class="tag '+(s.conf==='hoog'?'hi':s.conf==='gemiddeld'?'mid':'lo')+'">'+s.conf+'</span></span></div>'; });
+    if(positions.length<2) html+='<div class="hint">Eén positie — vertrouwen laag; meet 3–5 plekken.</div>';
+  }
+  // Zangkanaal (mic-scan)
+  html+='<div class="sectiontitle" style="margin:14px 0 6px">Zangkanaal (KSM9)</div>';
+  if(!scan.mic){
+    html+='<div class="kv"><span class="k">Vocal-preset</span><span class="v">doe stap 3 (microfoon) op het dashboard</span></div>';
+  } else {
+    const m=scan.mic, tr=trend(m), probs=[];
+    for(let i=0;i<ISO.length;i++){ if(ISO[i]>=200&&ISO[i]<=800){ const dev=m[i]-tr[i]; if(dev>=2.5) probs.push({hz:ISO[i], cut:-Math.min(3,Math.round(dev))}); } }
+    probs.sort((a,b)=>a.cut-b.cut);
+    const sib=groupDb(m,6300,9000), midref=groupDb(m,1000,4000), deess=(sib-midref)>-6;
+    const fb=argmaxBand(m,500);
+    html+='<div class="kv"><span class="k">HPF</span><span class="v">90–110 Hz</span></div>';
+    if(probs.length) probs.slice(0,2).forEach(p=>{ html+='<div class="kv"><span class="k">EQ '+fmtHz(p.hz)+' Hz</span><span class="v">'+p.cut.toFixed(1)+' dB (uit scan)</span></div>'; });
+    else html+='<div class="kv"><span class="k">Lage mid</span><span class="v">geen dreun — laat vlak</span></div>';
+    html+='<div class="kv"><span class="k">Presence</span><span class="v">+1–2 dB @ 3–4 kHz</span></div>';
+    html+='<div class="kv"><span class="k">De-ess</span><span class="v">'+(deess?'aan — 6–8 kHz':'licht/uit — weinig sis')+'</span></div>';
+    html+='<div class="kv"><span class="k">Compressor</span><span class="v">2–3:1, 3–6 dB GR</span></div>';
+    html+='<div class="kv"><span class="k">Feedback-kandidaat</span><span class="v">'+fmtHz(ISO[fb])+' Hz — smalle cut klaarhouden</span></div>';
+  }
+  wrap.innerHTML=html;
+}
+
 function renderSuggTable(){
   const {sugg}=suggestions();
   ['#dsuggwrap'].forEach(sel=>{
@@ -986,6 +1026,7 @@ function renderScan(){
   setText(['#dm-res'], positions.length ? String(sugg.length) : '—');
   setText(['#dm-fb'], scan.mic ? fmtHz(ISO[argmaxBand(scan.mic,500)])+' Hz' : '—');
   renderVocalPreset();
+  renderMixApply();
 }
 
 /* ---------- Sessie export / import ---------- */
