@@ -68,7 +68,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);
 .page{display:none;padding:18px clamp(16px,2.4vw,26px) 26px}
 .page.active{display:block}
 .phead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
-.phead h2{margin:0;font-size:20px} .phead p{margin:2px 0 0;color:var(--muted);font-size:13px;max-width:62ch}
+.phead h2{margin:0;font-size:20px} .phead p{margin:2px 0 0;color:var(--muted);font-size:13px;max-width:70ch}
 .pill{font-size:11px;letter-spacing:.6px;text-transform:uppercase;padding:5px 10px;border-radius:999px;
   border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .pill.ro{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent)}
@@ -79,10 +79,10 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);
 @media (max-width:900px){.g2,.g3{grid-template-columns:1fr}}
 
 /* meters */
-.meters{display:flex;gap:14px;flex-wrap:wrap}
-.metric{flex:1;min-width:120px;background:var(--panel-2);border-radius:12px;padding:12px 14px}
+.meters{display:flex;gap:12px;flex-wrap:wrap}
+.metric{flex:1;min-width:110px;background:var(--panel-2);border-radius:12px;padding:11px 13px}
 .metric .k{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--dim)}
-.metric .v{font-family:var(--mono);font-size:26px;font-variant-numeric:tabular-nums;margin-top:2px}
+.metric .v{font-family:var(--mono);font-size:24px;font-variant-numeric:tabular-nums;margin-top:2px}
 .metric .u{font-size:12px;color:var(--muted)}
 .clip{color:var(--good)} .clip.hot{color:var(--bad)}
 
@@ -97,6 +97,7 @@ canvas{display:block;width:100%;border-radius:10px;background:var(--panel-2);tou
 .btn.stop{background:var(--bad);border-color:var(--bad);color:#2a0606}
 .btn.ghost{background:transparent}
 .btn.big{padding:16px 22px;font-size:16px}
+.btn.sm{padding:9px 13px;font-size:13px}
 .btn:disabled{opacity:.45;cursor:default}
 .btnrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 
@@ -126,9 +127,28 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
 .poslist{display:flex;flex-wrap:wrap;gap:8px}
 .poschip{background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:12px;display:flex;gap:8px;align-items:center}
 .poschip button{background:transparent;border:0;color:var(--dim);cursor:pointer;font-size:14px;padding:0}
-.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px;align-items:center}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .sw{width:14px;height:3px;border-radius:2px;display:inline-block}
+
+/* ---- Dashboard ---- */
+.dash-cols{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;align-items:start}
+.dash-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+@media (max-width:900px){.dash-cols{grid-template-columns:1fr}}
+.scanstep{padding:12px 0;border-bottom:1px solid var(--line)}
+.scanstep:last-of-type{border-bottom:0}
+.scanstep-h{display:flex;align-items:center;gap:9px;font-size:14px}
+.scanstep-h b{font-weight:600}
+.scan-ic{width:22px;height:22px;border-radius:50%;background:var(--panel-2);border:1px solid var(--line);
+  display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);flex:none}
+.scanstep.done .scan-ic{background:var(--good);border-color:var(--good);color:#04231e}
+.scan-state{margin-left:auto;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--dim)}
+.scanstep.done .scan-state{color:var(--good)}
+.scanstep p.hint{margin:6px 0 8px}
+.scanvals{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.scanvals:empty{margin-top:0}
+.scanvals .sv{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-size:12px;color:var(--muted)}
+.scanvals .sv b{font-family:var(--mono);color:var(--fg);font-weight:600}
 
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--panel-2);
   border:1px solid var(--line);color:var(--fg);padding:11px 16px;border-radius:12px;font-size:13px;
@@ -150,8 +170,7 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
       <div class="sub">Live &middot; iPad &middot; prototype</div>
     </div>
     <nav class="nav" id="nav" role="tablist">
-      <button role="tab" data-tab="analyzer" aria-selected="true"><span class="ic">📊</span><span>Analyzer</span></button>
-      <button role="tab" data-tab="room"><span class="ic">📐</span><span>Zaalmeting</span></button>
+      <button role="tab" data-tab="dashboard" aria-selected="true"><span class="ic">🎛️</span><span>Dashboard</span></button>
       <button role="tab" data-tab="signal"><span class="ic">🔊</span><span>Testsignaal</span></button>
       <button role="tab" data-tab="vocal"><span class="ic">🎤</span><span>Vocal &amp; advies</span></button>
       <button role="tab" data-tab="mixer"><span class="ic">🎚️</span><span>Ui12 mixer</span></button>
@@ -165,90 +184,122 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
 
   <!-- MAIN -->
   <main class="main">
-    <!-- ANALYZER -->
-    <section class="page active" id="p-analyzer" role="tabpanel">
+    <!-- DASHBOARD -->
+    <section class="page active" id="p-dashboard" role="tabpanel">
       <div class="phead">
-        <div><h2>Live analyzer</h2><p>Ongekalibreerd, relatief spectrum via de iPad- of USB-microfoon. 31-bands zoals de Ui12 grafische EQ. Er wordt niets naar de mixer geschreven.</p></div>
+        <div><h2>Dashboard</h2><p>Eén overzicht: live niveaus, 31-bands spectrum en de sweep-scan installatie → zaal → microfoon, met meetwaardes. Relatief en ongekalibreerd — er wordt niets naar de mixer geschreven.</p></div>
         <span class="pill ro">Read-only</span>
       </div>
 
-      <div class="meters" style="margin-bottom:14px">
-        <div class="metric"><div class="k">RMS niveau</div><div class="v" id="m-rms">–∞</div><div class="u">dBFS (relatief)</div></div>
-        <div class="metric"><div class="k">Piek</div><div class="v" id="m-peak">–∞</div><div class="u">dBFS</div></div>
-        <div class="metric"><div class="k">Clip</div><div class="v clip" id="m-clip">OK</div><div class="u" id="m-sr">samplerate —</div></div>
+      <div class="meters">
+        <div class="metric"><div class="k">RMS</div><div class="v" id="dm-rms">–∞</div><div class="u">dBFS rel.</div></div>
+        <div class="metric"><div class="k">Piek</div><div class="v" id="dm-peak">–∞</div><div class="u">dBFS</div></div>
+        <div class="metric"><div class="k">Clip</div><div class="v clip" id="dm-clip">OK</div><div class="u" id="dm-sr">samplerate —</div></div>
+        <div class="metric"><div class="k">Zaalposities</div><div class="v" id="dm-pos">0</div><div class="u">vastgelegd</div></div>
+        <div class="metric"><div class="k">Resonanties</div><div class="v" id="dm-res">—</div><div class="u">boven trend</div></div>
+        <div class="metric"><div class="k">Feedback-kans</div><div class="v" id="dm-fb">—</div><div class="u">mic-scan</div></div>
       </div>
 
-      <div class="panel">
-        <div class="btnrow" style="margin-bottom:12px">
-          <button class="btn primary big" id="btn-mic">▶ Start meting</button>
-          <button class="btn ghost" id="btn-demo">Demo-data</button>
-          <div style="flex:1"></div>
-          <label class="ctl" style="flex-direction:row;align-items:center;gap:8px">FFT
-            <select id="fftsize">
-              <option value="2048">2048</option>
-              <option value="4096" selected>4096</option>
-              <option value="8192">8192</option>
-              <option value="16384">16384</option>
-            </select>
-          </label>
-          <label class="ctl" style="flex-direction:row;align-items:center;gap:8px">Demping
-            <select id="smooth">
-              <option value="0">Snel</option>
-              <option value="0.6" selected>Normaal</option>
-              <option value="0.85">Traag</option>
-            </select>
-          </label>
-          <label class="toggle">Peak-hold<input type="checkbox" id="peakhold" checked></label>
-        </div>
-        <canvas id="cv-spectrum" height="300" aria-label="Spectrum"></canvas>
-        <div class="legend">
-          <span><i class="sw" style="background:var(--bar)"></i>Live band</span>
-          <span><i class="sw" style="background:var(--cap)"></i>Peak-hold</span>
-          <span id="statustext" style="color:var(--dim)">Nog niet aan het meten</span>
-        </div>
-        <div class="hint">Zet voor een eerlijke meting ruis­onderdrukking/AGC uit — de app vraagt de mic al ongefilterd op. SPL-waarden zijn niet gekalibreerd zonder referentiemeetmicrofoon.</div>
-      </div>
-    </section>
-
-    <!-- ROOM -->
-    <section class="page" id="p-room" role="tabpanel">
-      <div class="phead">
-        <div><h2>Zaalmeting</h2><p>Meet met pink-noise via de PA op meerdere publieksposities. De app middelt de posities en stelt alléén brede, beperkte cuts voor — nooit grote boosts.</p></div>
-      </div>
-
-      <div class="grid g2">
-        <div class="panel">
-          <div class="sectiontitle">Meetposities</div>
-          <div class="btnrow" style="margin-bottom:10px">
-            <button class="btn primary" id="btn-capture" disabled>● Leg positie vast (3s)</button>
-            <button class="btn ghost" id="btn-clearpos">Wis alles</button>
+      <div class="dash-cols" style="margin-top:14px">
+        <!-- LINKER KOLOM: live meting + zaalcurve -->
+        <div class="dash-col">
+          <div class="panel">
+            <div class="btnrow" style="margin-bottom:12px">
+              <button class="btn primary big js-micbtn" id="dbtn-mic">▶ Start meting</button>
+              <button class="btn ghost js-demobtn">Demo</button>
+              <div style="flex:1"></div>
+              <label class="ctl" style="flex-direction:row;align-items:center;gap:7px">FFT
+                <select id="fftsize">
+                  <option value="2048">2048</option>
+                  <option value="4096" selected>4096</option>
+                  <option value="8192">8192</option>
+                  <option value="16384">16384</option>
+                </select>
+              </label>
+              <label class="ctl" style="flex-direction:row;align-items:center;gap:7px">Demping
+                <select id="smooth">
+                  <option value="0">Snel</option>
+                  <option value="0.6" selected>Normaal</option>
+                  <option value="0.85">Traag</option>
+                </select>
+              </label>
+              <label class="toggle">Peak-hold<input type="checkbox" id="peakhold" checked></label>
+            </div>
+            <canvas class="js-spectrum" id="cv-spectrum-db" height="250" aria-label="Live spectrum"></canvas>
+            <div class="legend">
+              <span><i class="sw" style="background:var(--bar)"></i>Live 31-bands</span>
+              <span><i class="sw" style="background:var(--cap)"></i>Peak-hold</span>
+              <span id="dstatustext" style="color:var(--dim)">Nog niet aan het meten</span>
+            </div>
           </div>
-          <div class="poslist" id="poslist"><span class="hint">Nog geen posities. Start eerst de meting in de Analyzer, speel pink-noise via de PA en leg per publieksplek een positie vast.</span></div>
-          <div class="hint" id="cap-status"></div>
-        </div>
-        <div class="panel">
-          <div class="sectiontitle">Gemiddelde zaalcurve</div>
-          <canvas id="cv-room" height="210" aria-label="Gemiddelde zaalcurve"></canvas>
-          <div class="legend">
-            <span><i class="sw" style="background:var(--bar)"></i>Gemeten gemiddelde</span>
-            <span><i class="sw" style="background:var(--warn)"></i>Voorgestelde cuts</span>
-            <span class="toggle" style="margin-left:auto"><label class="toggle">Bypass A/B<input type="checkbox" id="bypass"></label></span>
+
+          <div class="panel">
+            <div class="sectiontitle">Gemiddelde zaalcurve + voorgestelde cuts</div>
+            <canvas class="js-room" id="cv-room-db" height="190" aria-label="Zaalcurve"></canvas>
+            <div class="legend">
+              <span><i class="sw" style="background:var(--bar)"></i>Gemeten gemiddelde</span>
+              <span><i class="sw" style="background:var(--warn)"></i>Met cuts</span>
+              <label class="toggle" style="margin-left:auto">Bypass A/B<input type="checkbox" id="bypass"></label>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="panel" style="margin-top:14px">
-        <div class="phead" style="margin-bottom:6px">
-          <div class="sectiontitle" style="margin:0">Voorgestelde GEQ-correcties (cuts only)</div>
-          <div class="btnrow">
-            <button class="btn ghost" id="btn-export">⇩ Exporteer sessie (JSON)</button>
-            <button class="btn ghost" id="btn-import">⇧ Importeer</button>
-            <input type="file" id="file-import" accept="application/json,.json" hidden>
+        <!-- RECHTER KOLOM: 3-staps scan + testsignaal + adviezen -->
+        <div class="dash-col">
+          <div class="panel">
+            <div class="sectiontitle">Sweep-scan — 3 stappen</div>
+
+            <div class="scanstep" id="step-install">
+              <div class="scanstep-h"><span class="scan-ic">1</span><b>Installatie</b><span class="scan-state" id="st-install">open</span></div>
+              <p class="hint">Pink-noise via de PA; meet dicht bij de speaker. Toont de balans van het systeem zelf.</p>
+              <div class="btnrow"><button class="btn sm js-scan" data-kind="install" disabled>● Meet installatie (3s)</button></div>
+              <div class="scanvals" id="vals-install"></div>
+            </div>
+
+            <div class="scanstep" id="step-zaal">
+              <div class="scanstep-h"><span class="scan-ic">2</span><b>Zaal</b><span class="scan-state" id="st-zaal">open</span></div>
+              <p class="hint">Pink-noise via de PA; meet op 3–5 publieksplekken. De app middelt en stelt alléén brede cuts voor.</p>
+              <div class="btnrow">
+                <button class="btn sm js-scan" data-kind="zaal" disabled>● Leg zaalpositie vast (3s)</button>
+                <button class="btn sm ghost" id="dbtn-clearpos">Wis zaal</button>
+              </div>
+              <div class="poslist" id="dposlist" style="margin-top:8px"></div>
+              <div class="scanvals" id="vals-zaal"></div>
+            </div>
+
+            <div class="scanstep" id="step-mic">
+              <div class="scanstep-h"><span class="scan-ic">3</span><b>Microfoon</b><span class="scan-state" id="st-mic">open</span></div>
+              <p class="hint">Zing/praat gelijkmatig in de Shure Beta. Vindt de sterkste band — kandidaat voor feedback.</p>
+              <div class="btnrow"><button class="btn sm js-scan" data-kind="mic" disabled>● Meet microfoon (3s)</button></div>
+              <div class="scanvals" id="vals-mic"></div>
+            </div>
+
+            <div class="hint" id="dcap-status" style="margin-top:6px">Start eerst de meting, dan worden de scan-knoppen actief.</div>
+          </div>
+
+          <div class="panel">
+            <div class="sectiontitle">Testsignaal (voor de scan)</div>
+            <button class="btn big primary" id="dbtn-pink" style="width:100%;margin-bottom:10px">🔊 Houd ingedrukt: pink-noise</button>
+            <label class="ctl">Uitgangsniveau: <span id="dpink-lvl" style="font-family:var(--mono);color:var(--fg)">−24 dBFS</span>
+              <input type="range" id="dpink-gain" min="-48" max="-6" step="1" value="-24"></label>
+            <div class="hint">Begin láág en route pas naar de PA bij laag volume. Sweep en meer opties staan onder <b>Testsignaal</b>.</div>
+          </div>
+
+          <div class="panel">
+            <div class="phead" style="margin-bottom:6px">
+              <div class="sectiontitle" style="margin:0">Voorgestelde GEQ-cuts</div>
+              <div class="btnrow">
+                <button class="btn sm ghost" id="btn-export">⇩ Export</button>
+                <button class="btn sm ghost" id="btn-import">⇧ Import</button>
+                <input type="file" id="file-import" accept="application/json,.json" hidden>
+              </div>
+            </div>
+            <div id="dsuggwrap"><p class="hint">Leg zaalposities vast voor voorstellen. Begrensd op −6 dB, breed, nooit automatisch toegepast.</p></div>
           </div>
         </div>
-        <div id="suggwrap"><p class="hint">Leg minstens één positie vast om voorstellen te zien. Adviezen zijn begrensd op −6 dB, breed, en nooit automatisch toegepast.</p></div>
-        <div class="warnbox" style="margin-top:12px"><b>Let op</b> — dit is géén transfer-functie-meting. Voor echte zaalcorrectie meet je de PA met bekend testsignaal (pink-noise/sweep) vanaf meerdere posities, en vergelijk je met een huiscurve. EQ de zaal nooit blind vlak. Pas correcties alleen handmatig toe in de Ui12 na eigen beoordeling.</div>
       </div>
+
+      <div class="warnbox" style="margin-top:14px"><b>Let op</b> — dit is géén transfer-functie-meting met gekalibreerde referentie. Gebruik de waardes als richting, niet als absolute waarheid. Pas correcties altijd handmatig toe in de Ui12 ná eigen beoordeling; grote boosts en smalle notches zonder verificatie negeren.</div>
     </section>
 
     <!-- SIGNAL -->
@@ -326,7 +377,7 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
           <span class="hint">Opent in een nieuw tabblad. Standaardadres: <code>http://ui-mixer.io</code> of het IP van de mixer (bv. <code>http://10.10.1.1</code>).</span>
         </div>
       </div>
-      <div class="warnbox" style="margin-top:14px"><b>Waarom niet ingebouwd?</b> — de Ui12 draait op <code>http://</code> in je lokale netwerk. Een beveiligde (<code>https</code>) webpagina mag zo'n onbeveiligde pagina niet in een frame tonen (mixed-content-blokkade van de browser). Daarom opent de mixer in een eigen tabblad. In de latere native iPad-app kan dit wél in één scherm (WKWebView).</div>
+      <div class="warnbox" style="margin-top:14px"><b>Waarom niet ingebouwd?</b> — de Ui12 draait op <code>http://</code> in je lokale netwerk. Een beveiligde (<code>https</code>) webpagina mag zo'n onbeveiligde pagina niet in een frame tonen of aansturen (mixed-content-blokkade van de browser). Daarom opent de mixer in een eigen tabblad. Automatisch meeschrijven kan alleen via de latere native iPad-app of een lokale brug — zie mijn toelichting in de chat.</div>
     </section>
   </main>
 </div>
@@ -344,6 +395,7 @@ const ISO = [20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,
 const fmtHz = hz => hz>=1000 ? (hz%1000===0?hz/1000+'k':(hz/1000).toFixed(1).replace('.0','')+'k') : String(hz);
 
 const $ = s => document.querySelector(s);
+const setText = (ids,v)=>ids.forEach(s=>{const e=$(s); if(e) e.textContent=v;});
 const toastEl = $('#toast');
 let toastT;
 function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>toastEl.classList.remove('show'),2200); }
@@ -355,6 +407,8 @@ nav.addEventListener('click', e=>{
   nav.querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected', x===b?'true':'false'));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   $('#p-'+b.dataset.tab).classList.add('active');
+  // Canvassen van het net zichtbaar geworden tabblad opnieuw tekenen (hadden 0 breedte).
+  requestAnimationFrame(()=>{ drawSpectrum(); renderRoom(); });
 });
 
 /* ============================================================
@@ -374,6 +428,10 @@ function ensureCtx(){
   return Audio.ctx;
 }
 
+function setMicBtns(txt){ document.querySelectorAll('.js-micbtn').forEach(b=>b.textContent=txt); }
+function setStatus(txt){ setText(['#dstatustext'], txt); }
+function peakHoldOn(){ const e=$('#peakhold'); return e?e.checked:true; }
+
 async function startMic(){
   try{
     ensureCtx();
@@ -387,11 +445,11 @@ async function startMic(){
     Audio.sampleRate = Audio.ctx.sampleRate;
     Audio.running = true; Audio.demo=false;
     setMicStatus('on', 'Microfoon: actief');
-    $('#m-sr').textContent = 'samplerate '+Math.round(Audio.sampleRate)+' Hz';
+    setText(['#dm-sr'], 'samplerate '+Math.round(Audio.sampleRate)+' Hz');
     $('#s-sr').className='dot on'; $('#s-sr-t').textContent=Math.round(Audio.sampleRate/1000*10)/10+' kHz · '+$('#fftsize').value+'-pt FFT';
-    $('#statustext').textContent='Live meting (relatief, ongekalibreerd)';
-    $('#btn-mic').textContent='⏸ Stop meting';
-    $('#btn-capture').disabled=false;
+    setStatus('Live meting (relatief, ongekalibreerd)');
+    setMicBtns('⏸ Stop meting');
+    updateScanDisabled();
     loop();
   }catch(err){
     let m = err && err.name==='NotAllowedError' ? 'Microfoontoegang geweigerd — sta de mic toe in Safari.'
@@ -400,7 +458,7 @@ async function startMic(){
             ? 'Mic vereist HTTPS. Open deze pagina via een https-adres (zie uitleg).'
             : ('Audio kon niet starten: '+(err&&err.message||err));
     setMicStatus('off', 'Microfoon: fout');
-    $('#statustext').textContent=m;
+    setStatus(m);
     toast(m);
   }
 }
@@ -416,22 +474,24 @@ function setupAnalyser(){
 
 function stopMic(){
   Audio.running=false; cancelAnimationFrame(Audio.raf);
-  if(capInterval){ clearInterval(capInterval); capturing=false; $('#btn-capture').disabled=true; }
+  if(capInterval){ clearInterval(capInterval); capInterval=0; capturing=false; }
   if(Audio.source){ try{Audio.source.disconnect();}catch(e){} Audio.source=null; }
   if(Audio.stream){ Audio.stream.getTracks().forEach(t=>t.stop()); Audio.stream=null; }
   setMicStatus('off','Microfoon: uit');
-  $('#statustext').textContent='Meting gestopt';
-  $('#btn-mic').textContent='▶ Start meting';
-  $('#btn-capture').disabled=true;
+  setStatus('Meting gestopt');
+  setMicBtns('▶ Start meting');
+  updateScanDisabled();
 }
 
 function setMicStatus(cls,txt){ const d=$('#s-mic'); d.className='dot '+(cls==='on'?'on':cls==='warn'?'warnc':'off'); $('#s-mic-t').textContent=txt; }
 
-$('#btn-mic').addEventListener('click', ()=>{
+function toggleMic(){
   if(Audio.running && !Audio.demo){ stopMic(); }
   else { if(Audio.demo) stopDemo(); startMic(); }
-});
-$('#fftsize').addEventListener('change', ()=>{ if(Audio.analyser) setupAnalyser(); });
+}
+document.querySelectorAll('.js-micbtn').forEach(b=>b.addEventListener('click', toggleMic));
+document.querySelectorAll('.js-demobtn').forEach(b=>b.addEventListener('click', ()=>{ if(Audio.demo) stopDemo(); else startDemo(); }));
+$('#fftsize').addEventListener('change', ()=>{ if(Audio.analyser) setupAnalyser(); $('#s-sr-t').textContent && $('#s-sr').classList.contains('on') && ($('#s-sr-t').textContent=Math.round((Audio.sampleRate||0)/1000*10)/10+' kHz · '+$('#fftsize').value+'-pt FFT'); });
 $('#smooth').addEventListener('change', ()=>{ if(Audio.analyser) Audio.analyser.smoothingTimeConstant=parseFloat($('#smooth').value); });
 
 /* ---------- DEMO MODE (synthetische kamer, geen mic) ---------- */
@@ -440,14 +500,13 @@ function startDemo(){
   if(Audio.running && !Audio.demo) stopMic();
   Audio.demo=true; Audio.running=true;
   setMicStatus('warn','Microfoon: DEMO (synthetisch)');
-  $('#statustext').textContent='Demo-data — geen echte microfoon';
-  $('#m-sr').textContent='samplerate 48000 Hz (demo)';
-  $('#btn-capture').disabled=false;
-  $('#btn-mic').textContent='▶ Start meting';
+  setStatus('Demo-data — geen echte microfoon');
+  setText(['#dm-sr'],'samplerate 48000 Hz (demo)');
+  setMicBtns('⏸ Stop meting');
+  updateScanDisabled();
   loop();
 }
-function stopDemo(){ Audio.demo=false; Audio.running=false; cancelAnimationFrame(Audio.raf); setMicStatus('off','Microfoon: uit'); }
-$('#btn-demo').addEventListener('click', ()=>{ if(Audio.demo) stopDemo(); else startDemo(); });
+function stopDemo(){ Audio.demo=false; Audio.running=false; cancelAnimationFrame(Audio.raf); setMicStatus('off','Microfoon: uit'); setMicBtns('▶ Start meting'); updateScanDisabled(); }
 
 function demoBands(){
   demoT += 0.03;
@@ -499,10 +558,10 @@ function loop(){
   if(!Audio.running) return;
   liveBands = computeBands();
   const lv = computeLevels();
-  $('#m-rms').textContent = lv.rms<=-99 ? '–∞' : lv.rms.toFixed(1);
-  $('#m-peak').textContent = lv.peak<=-99 ? '–∞' : lv.peak.toFixed(1);
-  const clipEl=$('#m-clip'); clipEl.textContent = lv.clip?'CLIP':'OK'; clipEl.className='clip'+(lv.clip?' hot':'');
-  const hold=$('#peakhold').checked;
+  setText(['#dm-rms'], lv.rms<=-99 ? '–∞' : lv.rms.toFixed(1));
+  setText(['#dm-peak'], lv.peak<=-99 ? '–∞' : lv.peak.toFixed(1));
+  const clipEl=$('#dm-clip'); if(clipEl){ clipEl.textContent = lv.clip?'CLIP':'OK'; clipEl.className='v clip'+(lv.clip?' hot':''); }
+  const hold=peakHoldOn();
   for(let i=0;i<ISO.length;i++){
     if(hold){ peaks[i] = Math.max(peaks[i]-0.4, liveBands[i]); } else peaks[i]=liveBands[i];
   }
@@ -521,8 +580,9 @@ const DB_MIN=-100, DB_MAX=-6;
 const dbToY=(db,h,pad)=>{ const t=(db-DB_MIN)/(DB_MAX-DB_MIN); return h-pad - Math.max(0,Math.min(1,t))*(h-pad*1.6); };
 function cssvar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
-function drawSpectrum(){
-  const cv=$('#cv-spectrum'); const {ctx,w,h}=fitCanvas(cv);
+function drawSpectrum(){ document.querySelectorAll('canvas.js-spectrum').forEach(drawSpectrumTo); }
+function drawSpectrumTo(cv){
+  const {ctx,w,h}=fitCanvas(cv);
   if(w<40||h<40) return; // tab verborgen / nog geen layout
   ctx.clearRect(0,0,w,h);
   const pad=22, n=ISO.length, gap=3;
@@ -530,6 +590,7 @@ function drawSpectrum(){
   // grid
   ctx.strokeStyle=cssvar('--line'); ctx.fillStyle=cssvar('--dim'); ctx.font='10px var(--mono)'; ctx.lineWidth=1;
   [-20,-40,-60,-80].forEach(db=>{ const y=dbToY(db,h,pad); ctx.globalAlpha=.5; ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke(); ctx.globalAlpha=1; ctx.fillText(db+'dB',2,y-2); });
+  const hold=peakHoldOn();
   for(let i=0;i<n;i++){
     const x=i*bw+gap/2, val=liveBands[i];
     const y=dbToY(val,h,pad), bh=(h-pad)-y;
@@ -538,7 +599,7 @@ function drawSpectrum(){
     ctx.globalAlpha = val<=-99?0.12:1;
     roundRect(ctx,x,y,bw-gap,Math.max(1,bh),3); ctx.fill();
     ctx.globalAlpha=1;
-    if($('#peakhold').checked && peaks[i]>-99){ const py=dbToY(peaks[i],h,pad); ctx.fillStyle=cssvar('--cap'); ctx.fillRect(x,py,bw-gap,2); }
+    if(hold && peaks[i]>-99){ const py=dbToY(peaks[i],h,pad); ctx.fillStyle=cssvar('--cap'); ctx.fillRect(x,py,bw-gap,2); }
     if(i%3===0){ ctx.fillStyle=cssvar('--dim'); ctx.font='9px var(--mono)'; ctx.fillText(fmtHz(ISO[i]), x, h-6); }
   }
 }
@@ -546,19 +607,29 @@ function roundRect(ctx,x,y,w,h,r){ r=Math.max(0,Math.min(r,w/2,h/2)); ctx.beginP
   ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath(); }
 
 /* ============================================================
-   ZAALMETING — capture, middelen, adviezen
+   SCAN — installatie / zaal / microfoon
    ============================================================ */
-let positions = [];     // array van band-arrays (dB)
+let positions = [];              // zaalmeting: array van band-arrays (dB)
+const scan = { install:null, mic:null };
 let capturing=false, capInterval=0;
 const CAP_MS=3000;
+const KIND_LABEL = { install:'installatie', zaal:'zaalpositie', mic:'microfoon' };
 
-$('#btn-capture').addEventListener('click', startCapture);
-function startCapture(){
+function updateScanDisabled(){
+  const off = !Audio.running || capturing;
+  document.querySelectorAll('.js-scan').forEach(x=>x.disabled=off);
+}
+function capStatus(t){ setText(['#dcap-status'], t); }
+
+document.querySelectorAll('.js-scan').forEach(b=>b.addEventListener('click', ()=>runCapture(b.dataset.kind)));
+
+function runCapture(kind){
   if(!Audio.running){ toast('Start eerst de meting.'); return; }
   if(capturing) return;
-  capturing=true;
+  capturing=true; updateScanDisabled();
   let capBuf=ISO.map(()=>0), capFrames=0; const capStart=performance.now();
-  $('#btn-capture').disabled=true; $('#cap-status').textContent='Vastleggen… houd pink-noise aan op de PA. 3.0s';
+  const label = KIND_LABEL[kind]||kind;
+  capStatus('Meet '+label+'… houd signaal aan. 3.0s');
   // Eigen timer (niet aan requestAnimationFrame gekoppeld): werkt ook als de
   // render-loop even pauzeert, en leest de analyser rechtstreeks uit.
   capInterval=setInterval(()=>{
@@ -566,25 +637,28 @@ function startCapture(){
     for(let i=0;i<ISO.length;i++) capBuf[i]+=Math.pow(10,bands[i]/10);
     capFrames++;
     const el=performance.now()-capStart;
-    $('#cap-status').textContent='Vastleggen… '+Math.max(0,(CAP_MS-el)/1000).toFixed(1)+'s';
+    capStatus('Meet '+label+'… '+Math.max(0,(CAP_MS-el)/1000).toFixed(1)+'s');
     if(el>=CAP_MS){
-      clearInterval(capInterval); capturing=false;
+      clearInterval(capInterval); capInterval=0; capturing=false;
       const avg=capBuf.map(p=>10*Math.log10(Math.max(p/Math.max(capFrames,1),1e-10)));
-      positions.push(avg);
-      $('#btn-capture').disabled=false; $('#cap-status').textContent='Positie '+positions.length+' vastgelegd.';
-      renderPositions(); renderRoom();
+      if(kind==='zaal'){ positions.push(avg); renderPositions(); renderRoom(); capStatus('Zaalpositie '+positions.length+' vastgelegd.'); }
+      else { scan[kind]=avg; capStatus(label.charAt(0).toUpperCase()+label.slice(1)+' gemeten.'); }
+      updateScanDisabled(); renderScan();
     }
   },50);
 }
-$('#btn-clearpos').addEventListener('click', ()=>{ positions=[]; renderPositions(); renderRoom(); });
+
+['#dbtn-clearpos'].forEach(s=>{ const e=$(s); if(e) e.addEventListener('click', ()=>{ positions=[]; renderPositions(); renderRoom(); renderScan(); }); });
 
 function renderPositions(){
-  const el=$('#poslist');
-  if(!positions.length){ el.innerHTML='<span class="hint">Nog geen posities. Start de meting, speel pink-noise via de PA en leg per publieksplek een positie vast.</span>'; return; }
-  el.innerHTML='';
-  positions.forEach((_,i)=>{ const c=document.createElement('span'); c.className='poschip';
-    c.innerHTML='Positie '+(i+1)+' <button title="verwijder" data-i="'+i+'">✕</button>'; el.appendChild(c); });
-  el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ positions.splice(+b.dataset.i,1); renderPositions(); renderRoom(); }));
+  ['#dposlist'].forEach(sel=>{
+    const el=$(sel); if(!el) return;
+    if(!positions.length){ el.innerHTML='<span class="hint" style="margin:0">Nog geen zaalposities.</span>'; return; }
+    el.innerHTML='';
+    positions.forEach((_,i)=>{ const c=document.createElement('span'); c.className='poschip';
+      c.innerHTML='Pos '+(i+1)+' <button title="verwijder" data-i="'+i+'">✕</button>'; el.appendChild(c); });
+    el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ positions.splice(+b.dataset.i,1); renderPositions(); renderRoom(); renderScan(); }));
+  });
 }
 
 function spatialAverage(){
@@ -615,25 +689,27 @@ function suggestions(){
   return {avg, sugg};
 }
 
+/* ---------- Zaalcurve canvas ---------- */
+function anyBypass(){ const b=$('#bypass'); return b?b.checked:false; }
 function renderRoom(){
   renderSuggTable();
-  const cv=$('#cv-room'); const {ctx,w,h}=fitCanvas(cv);
+  const {avg,sugg}=suggestions();
+  document.querySelectorAll('canvas.js-room').forEach(cv=>drawRoomTo(cv,avg,sugg));
+}
+function drawRoomTo(cv,avg,sugg){
+  const {ctx,w,h}=fitCanvas(cv);
   if(w<40||h<40){ return; } // tab verborgen
   ctx.clearRect(0,0,w,h);
-  const {avg,sugg}=suggestions();
   const pad=20,n=ISO.length;
   ctx.strokeStyle=cssvar('--line'); ctx.globalAlpha=.5;
   [-20,-40,-60,-80].forEach(db=>{const y=dbToY(db,h,pad);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();});
   ctx.globalAlpha=1;
-  if(!avg){ ctx.fillStyle=cssvar('--dim'); ctx.font='12px var(--sans)'; ctx.fillText('Nog geen meting',12,h/2); return; }
-  const bypass=$('#bypass').checked;
+  if(!avg){ ctx.fillStyle=cssvar('--dim'); ctx.font='12px var(--sans)'; ctx.fillText('Nog geen zaalmeting',12,h/2); return; }
+  const bypass=anyBypass();
   const corrected = avg.map((v,i)=>{ const s=sugg.find(x=>x.i===i); return bypass? v : v+(s?s.cut:0); });
   const xOf=i=> pad + i*(w-pad*1.3)/(n-1);
-  // gemeten
   drawCurve(ctx, avg, xOf, h, pad, cssvar('--bar'), 2, .5);
-  // gecorrigeerd/voorstel
   if(sugg.length){ drawCurve(ctx, corrected, xOf, h, pad, cssvar('--warn'), 2, 1); }
-  // labels
   ctx.fillStyle=cssvar('--dim'); ctx.font='9px var(--mono)';
   for(let i=0;i<n;i+=4){ ctx.fillText(fmtHz(ISO[i]), xOf(i)-6, h-5); }
 }
@@ -642,22 +718,67 @@ function drawCurve(ctx,data,xOf,h,pad,color,lw,alpha){
   data.forEach((v,i)=>{ const x=xOf(i),y=dbToY(v,h,pad); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
   ctx.stroke(); ctx.globalAlpha=1;
 }
+['#bypass'].forEach(s=>{ const e=$(s); if(e) e.addEventListener('change', renderRoom); });
+
 function renderSuggTable(){
-  const {sugg}=suggestions(); const wrap=$('#suggwrap');
-  if(!positions.length){ wrap.innerHTML='<p class="hint">Leg minstens één positie vast om voorstellen te zien. Adviezen zijn begrensd op −6 dB, breed, en nooit automatisch toegepast.</p>'; return; }
-  if(!sugg.length){ wrap.innerHTML='<p class="hint">Geen duidelijke resonanties boven +'+THRESH+' dB gevonden. De zaalcurve zit al redelijk vlak — kleine correcties liever op gehoor.</p>'; return; }
-  let html='<table><thead><tr><th>Band</th><th class="num">Afwijking</th><th class="num">Voorgestelde cut</th><th>Vertrouwen</th></tr></thead><tbody>';
-  sugg.forEach(s=>{ const t=s.conf==='hoog'?'hi':s.conf==='gemiddeld'?'mid':'lo';
-    html+='<tr><td>'+fmtHz(s.hz)+' Hz</td><td class="num">+'+s.dev.toFixed(1)+' dB</td><td class="num">'+s.cut.toFixed(1)+' dB</td><td><span class="tag '+t+'">'+s.conf+'</span></td></tr>'; });
-  html+='</tbody></table>';
-  if(positions.length<2) html+='<div class="hint">Slechts één positie — vertrouwen blijft laag. Meet 3–5 publieksplekken voor een betrouwbaar gemiddelde.</div>';
-  wrap.innerHTML=html;
+  const {sugg}=suggestions();
+  ['#dsuggwrap'].forEach(sel=>{
+    const wrap=$(sel); if(!wrap) return;
+    if(!positions.length){ wrap.innerHTML='<p class="hint" style="margin:0">Leg zaalposities vast voor voorstellen. Begrensd op −6 dB, breed, nooit automatisch toegepast.</p>'; return; }
+    if(!sugg.length){ wrap.innerHTML='<p class="hint" style="margin:0">Geen duidelijke resonanties boven +'+THRESH+' dB. De zaalcurve zit al redelijk vlak — kleine correcties liever op gehoor.</p>'; return; }
+    let html='<table><thead><tr><th>Band</th><th class="num">Afw.</th><th class="num">Cut</th><th>Vertrouwen</th></tr></thead><tbody>';
+    sugg.forEach(s=>{ const t=s.conf==='hoog'?'hi':s.conf==='gemiddeld'?'mid':'lo';
+      html+='<tr><td>'+fmtHz(s.hz)+' Hz</td><td class="num">+'+s.dev.toFixed(1)+'</td><td class="num">'+s.cut.toFixed(1)+'</td><td><span class="tag '+t+'">'+s.conf+'</span></td></tr>'; });
+    html+='</tbody></table>';
+    if(positions.length<2) html+='<div class="hint">Slechts één positie — vertrouwen blijft laag. Meet 3–5 publieksplekken.</div>';
+    wrap.innerHTML=html;
+  });
+}
+
+/* ---------- Scan-meetwaardes + stapstatus ---------- */
+function argmaxBand(arr,fromHz){ let bi=0,bv=-1e9; for(let i=0;i<arr.length;i++){ if(fromHz&&ISO[i]<fromHz) continue; if(arr[i]>bv){bv=arr[i];bi=i;} } return bi; }
+function tilt(arr){ let lf=0,lc=0,hf=0,hc=0; for(let i=0;i<arr.length;i++){ if(ISO[i]<=250){lf+=arr[i];lc++;} if(ISO[i]>=4000){hf+=arr[i];hc++;} } return (lf/Math.max(lc,1))-(hf/Math.max(hc,1)); }
+function sv(k,v){ return '<span class="sv">'+k+' <b>'+v+'</b></span>'; }
+
+function renderScan(){
+  // 1 — installatie
+  const si=$('#vals-install'), stepI=$('#step-install');
+  if(scan.install){
+    const d=argmaxBand(scan.install), t=tilt(scan.install);
+    const bal = t>2?'(bas-zwaar)':t<-2?'(dun/scherp)':'(gebalanceerd)';
+    si.innerHTML = sv('Dominant', fmtHz(ISO[d])+' Hz') + sv('Laag↔hoog', (t>=0?'+':'')+t.toFixed(1)+' dB '+bal);
+    stepI.classList.add('done'); setText(['#st-install'],'gemeten');
+  } else { si.innerHTML=''; stepI.classList.remove('done'); setText(['#st-install'],'open'); }
+
+  // 2 — zaal
+  const sz=$('#vals-zaal'), stepZ=$('#step-zaal');
+  const {sugg}=suggestions();
+  if(positions.length){
+    const big=sugg.slice().sort((a,b)=>b.dev-a.dev)[0];
+    sz.innerHTML = sv('Posities', String(positions.length)) + sv('Resonanties', String(sugg.length)) +
+      (big? sv('Grootste', fmtHz(big.hz)+' Hz +'+big.dev.toFixed(1)+' dB') : '');
+    stepZ.classList.add('done'); setText(['#st-zaal'], positions.length+' pos');
+  } else { sz.innerHTML=''; stepZ.classList.remove('done'); setText(['#st-zaal'],'open'); }
+
+  // 3 — microfoon
+  const sm=$('#vals-mic'), stepM=$('#step-mic');
+  if(scan.mic){
+    const fb=argmaxBand(scan.mic,500);
+    sm.innerHTML = sv('Sterkste', fmtHz(ISO[fb])+' Hz') + sv('= feedback-kandidaat','let op');
+    stepM.classList.add('done'); setText(['#st-mic'],'gemeten');
+  } else { sm.innerHTML=''; stepM.classList.remove('done'); setText(['#st-mic'],'open'); }
+
+  // dashboard-tegels
+  setText(['#dm-pos'], String(positions.length));
+  setText(['#dm-res'], positions.length ? String(sugg.length) : '—');
+  setText(['#dm-fb'], scan.mic ? fmtHz(ISO[argmaxBand(scan.mic,500)])+' Hz' : '—');
 }
 
 /* ---------- Sessie export / import ---------- */
 $('#btn-export').addEventListener('click', ()=>{
-  const data={ app:'Smart Soundcheck', versie:1, datum:new Date().toISOString(),
-    iso:ISO, posities:positions, voorstellen:suggestions().sugg, gemiddelde:spatialAverage() };
+  const data={ app:'Smart Soundcheck', versie:2, datum:new Date().toISOString(),
+    iso:ISO, posities:positions, installatie:scan.install, microfoon:scan.mic,
+    voorstellen:suggestions().sugg, gemiddelde:spatialAverage() };
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a');
   a.href=url; a.download='soundcheck-sessie-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';
@@ -667,12 +788,17 @@ $('#btn-export').addEventListener('click', ()=>{
 $('#btn-import').addEventListener('click', ()=>$('#file-import').click());
 $('#file-import').addEventListener('change', e=>{
   const f=e.target.files[0]; if(!f) return; const r=new FileReader();
-  r.onload=()=>{ try{ const d=JSON.parse(r.result); if(Array.isArray(d.posities)){ positions=d.posities; renderPositions(); renderRoom(); toast('Sessie geladen ('+positions.length+' posities).'); } else toast('Geen posities in bestand.'); }
-    catch(err){ toast('Kon JSON niet lezen.'); } };
+  r.onload=()=>{ try{ const d=JSON.parse(r.result);
+      if(Array.isArray(d.posities)){ positions=d.posities; }
+      if(Array.isArray(d.installatie)){ scan.install=d.installatie; }
+      if(Array.isArray(d.microfoon)){ scan.mic=d.microfoon; }
+      renderPositions(); renderRoom(); renderScan(); toast('Sessie geladen ('+positions.length+' posities).');
+    } catch(err){ toast('Kon JSON niet lezen.'); } };
   r.readAsText(f); e.target.value='';
 });
 try{ const saved=localStorage.getItem('ssc_positions'); if(saved){ positions=JSON.parse(saved); } }catch(e){}
-window.addEventListener('beforeunload',()=>{ try{ localStorage.setItem('ssc_positions',JSON.stringify(positions)); }catch(e){} });
+try{ const s2=localStorage.getItem('ssc_scan'); if(s2){ const o=JSON.parse(s2); scan.install=o.install||null; scan.mic=o.mic||null; } }catch(e){}
+window.addEventListener('beforeunload',()=>{ try{ localStorage.setItem('ssc_positions',JSON.stringify(positions)); localStorage.setItem('ssc_scan',JSON.stringify(scan)); }catch(e){} });
 
 /* ============================================================
    TESTSIGNAAL — pink-noise + sweep, hold-to-play
@@ -691,14 +817,15 @@ function makePink(){ if(Sig.pinkBuf) return Sig.pinkBuf; ensureCtx();
 function stopAll(){
   if(Sig.gain){ const t=Audio.ctx.currentTime; Sig.gain.gain.cancelScheduledValues(t); Sig.gain.gain.setValueAtTime(Sig.gain.gain.value,t); Sig.gain.gain.linearRampToValueAtTime(0,t+0.03); }
   setTimeout(()=>{ if(Sig.pinkSrc){try{Sig.pinkSrc.stop();}catch(e){} Sig.pinkSrc=null;} if(Sig.osc){try{Sig.osc.stop();}catch(e){} Sig.osc=null;} },40);
-  Sig.playing=null; $('#sig-status').textContent='Stil.';
+  Sig.playing=null; setText(['#sig-status'],'Stil.');
 }
 function dbToGain(db){ return Math.pow(10, db/20); }
-function playPink(){ if(Sig.playing) return; ensureCtx(); const g=sigGain(); const src=Audio.ctx.createBufferSource();
+function playPink(gainDb){ if(Sig.playing) return; ensureCtx(); const g=sigGain(); const src=Audio.ctx.createBufferSource();
   src.buffer=makePink(); src.loop=true; src.connect(g); src.start(); Sig.pinkSrc=src; Sig.playing='pink';
-  const t=Audio.ctx.currentTime; const target=dbToGain(parseFloat($('#pink-gain').value));
+  const t=Audio.ctx.currentTime; const db = (gainDb!=null)?gainDb:parseFloat($('#pink-gain').value);
+  const target=dbToGain(db);
   g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(Math.max(target,0.0002),t+0.25);
-  $('#sig-status').textContent='Pink-noise speelt…';
+  setText(['#sig-status'],'Pink-noise speelt…');
 }
 function playSweep(){ if(Sig.playing) return; ensureCtx(); const g=sigGain(); const o=Audio.ctx.createOscillator(); o.type='sine';
   const dur=parseFloat($('#sweep-dur').value); const t=Audio.ctx.currentTime;
@@ -707,20 +834,23 @@ function playSweep(){ if(Sig.playing) return; ensureCtx(); const g=sigGain(); co
   const target=dbToGain(parseFloat($('#sweep-gain').value));
   g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(Math.max(target,0.0002),t+0.1);
   o.onended=()=>{ if(Sig.playing==='sweep') stopAll(); };
-  $('#sig-status').textContent='Sweep speelt…';
+  setText(['#sig-status'],'Sweep speelt…');
 }
 function holdBtn(el, startFn){
+  if(!el) return;
   const start=e=>{ e.preventDefault(); startFn(); };
   const end=e=>{ e.preventDefault(); stopAll(); };
   el.addEventListener('pointerdown',start); el.addEventListener('pointerup',end);
   el.addEventListener('pointerleave',end); el.addEventListener('pointercancel',end);
 }
-holdBtn($('#btn-pink'), playPink);
+holdBtn($('#btn-pink'), ()=>playPink());
+holdBtn($('#dbtn-pink'), ()=>playPink(parseFloat($('#dpink-gain').value)));
 holdBtn($('#btn-sweep'), playSweep);
 $('#btn-stopall').addEventListener('click', stopAll);
-$('#pink-gain').addEventListener('input', e=>{ $('#pink-lvl').textContent=e.target.value+' dBFS'; if(Sig.playing==='pink'&&Sig.gain){ const t=Audio.ctx.currentTime; Sig.gain.gain.linearRampToValueAtTime(dbToGain(+e.target.value),t+0.05);} });
-$('#sweep-gain').addEventListener('input', e=>{ $('#sweep-lvl').textContent=e.target.value+' dBFS'; });
-$('#sweep-dur').addEventListener('input', e=>{ $('#sweep-dur-l').textContent=e.target.value+' s'; });
+$('#pink-gain').addEventListener('input', e=>{ setText(['#pink-lvl'],e.target.value+' dBFS'); if(Sig.playing==='pink'&&Sig.gain){ const t=Audio.ctx.currentTime; Sig.gain.gain.linearRampToValueAtTime(dbToGain(+e.target.value),t+0.05);} });
+$('#dpink-gain').addEventListener('input', e=>{ setText(['#dpink-lvl'],e.target.value+' dBFS'); if(Sig.playing==='pink'&&Sig.gain){ const t=Audio.ctx.currentTime; Sig.gain.gain.linearRampToValueAtTime(dbToGain(+e.target.value),t+0.05);} });
+$('#sweep-gain').addEventListener('input', e=>{ setText(['#sweep-lvl'],e.target.value+' dBFS'); });
+$('#sweep-dur').addEventListener('input', e=>{ setText(['#sweep-dur-l'],e.target.value+' s'); });
 
 /* ============================================================
    MIXER launcher
@@ -731,7 +861,7 @@ $('#btn-openmix').addEventListener('click', ()=>{
 });
 
 /* init */
-renderPositions(); renderRoom();
+renderPositions(); renderRoom(); renderScan(); updateScanDisabled();
 window.addEventListener('resize', ()=>{ drawSpectrum(); renderRoom(); });
 </script>
 </body>
