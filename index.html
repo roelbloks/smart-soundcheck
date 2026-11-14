@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Soundcheck">
+<meta name="theme-color" content="#0b0e12">
+<title>Smart Soundcheck</title>
+<style>
+/* Layout: FOH-donkere iPad-landscape tool. Tabbar links/boven, werkvlak rechts.
+   Kleuren als tokens, donker-eerst; licht alleen als het systeem erom vraagt. */
+:root{
+  --bg:#0b0e12; --panel:#141a21; --panel-2:#1b232c; --line:#2a333d;
+  --fg:#e8edf2; --muted:#8c99a6; --dim:#5e6a76;
+  --accent:#36d1b7; --accent-2:#2aa3d6;
+  --warn:#f2b23e; --bad:#ef5b5b; --good:#49c17a;
+  --bar:#2aa3d6; --bar-hot:#36d1b7; --cap:#e8edf2;
+  --radius:14px; --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#eef2f5; --panel:#ffffff; --panel-2:#f1f5f8; --line:#d6dee5;
+  --fg:#14202b; --muted:#5a6672; --dim:#8694a0;
+  --bar:#1f86b8; --bar-hot:#1fa892; --cap:#14202b; color-scheme:light;
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);
+  font-size:15px;line-height:1.45;overflow:hidden;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+
+.app{display:grid;grid-template-columns:230px 1fr;height:100%}
+@media (max-width:760px){.app{grid-template-columns:1fr;grid-template-rows:1fr auto}}
+
+/* ---- Sidebar / tabs ---- */
+.side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.brand{padding:18px 18px 14px;border-bottom:1px solid var(--line)}
+.brand h1{margin:0;font-size:16px;letter-spacing:.2px}
+.brand .sub{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:1.2px;margin-top:3px}
+.nav{display:flex;flex-direction:column;gap:2px;padding:10px;overflow:auto;flex:1}
+.nav button{display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  background:transparent;border:0;color:var(--muted);font:inherit;font-size:14px;
+  padding:12px 13px;border-radius:10px;cursor:pointer}
+.nav button .ic{width:20px;text-align:center;font-size:16px;opacity:.9}
+.nav button[aria-selected="true"]{background:var(--panel-2);color:var(--fg)}
+.nav button:active{background:var(--panel-2)}
+.statusdot{margin:10px;padding:11px 13px;background:var(--panel-2);border-radius:10px;font-size:12px;color:var(--muted)}
+.statusdot .row{display:flex;align-items:center;gap:8px;margin:3px 0}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--dim);flex:none}
+.dot.on{background:var(--good)} .dot.warnc{background:var(--warn)} .dot.off{background:var(--bad)}
+
+@media (max-width:760px){
+  .side{flex-direction:row;border-right:0;border-top:1px solid var(--line);order:2;overflow:auto}
+  .brand,.statusdot{display:none}
+  .nav{flex-direction:row;padding:6px}
+  .nav button{flex-direction:column;gap:3px;font-size:10px;padding:8px 10px;min-width:64px}
+}
+
+/* ---- Main ---- */
+.main{min-width:0;min-height:0;overflow:auto;position:relative}
+.page{display:none;padding:18px clamp(16px,2.4vw,26px) 26px}
+.page.active{display:block}
+.phead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.phead h2{margin:0;font-size:20px} .phead p{margin:2px 0 0;color:var(--muted);font-size:13px;max-width:62ch}
+.pill{font-size:11px;letter-spacing:.6px;text-transform:uppercase;padding:5px 10px;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.ro{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent)}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:1fr 1fr} .g3{grid-template-columns:repeat(3,1fr)}
+@media (max-width:900px){.g2,.g3{grid-template-columns:1fr}}
+
+/* meters */
+.meters{display:flex;gap:14px;flex-wrap:wrap}
+.metric{flex:1;min-width:120px;background:var(--panel-2);border-radius:12px;padding:12px 14px}
+.metric .k{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--dim)}
+.metric .v{font-family:var(--mono);font-size:26px;font-variant-numeric:tabular-nums;margin-top:2px}
+.metric .u{font-size:12px;color:var(--muted)}
+.clip{color:var(--good)} .clip.hot{color:var(--bad)}
+
+canvas{display:block;width:100%;border-radius:10px;background:var(--panel-2);touch-action:none}
+
+/* buttons */
+.btn{appearance:none;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);
+  font:inherit;font-weight:600;padding:12px 18px;border-radius:11px;cursor:pointer;display:inline-flex;
+  align-items:center;gap:8px;justify-content:center}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#04231e}
+.btn.stop{background:var(--bad);border-color:var(--bad);color:#2a0606}
+.btn.ghost{background:transparent}
+.btn.big{padding:16px 22px;font-size:16px}
+.btn:disabled{opacity:.45;cursor:default}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+label.ctl{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted)}
+select,input[type=text],input[type=number]{appearance:none;background:var(--panel-2);border:1px solid var(--line);
+  color:var(--fg);font:inherit;padding:10px 12px;border-radius:10px;min-width:0}
+input[type=range]{width:100%}
+.hint{color:var(--dim);font-size:12px;margin-top:8px}
+.warnbox{background:color-mix(in srgb,var(--warn) 14%,transparent);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);
+  color:var(--fg);padding:11px 13px;border-radius:10px;font-size:13px}
+.warnbox.bad{background:color-mix(in srgb,var(--bad) 14%,transparent);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.warnbox b{color:var(--warn)} .warnbox.bad b{color:var(--bad)}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th{color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+td.num{font-family:var(--mono);text-align:right}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.tag.hi{background:color-mix(in srgb,var(--good) 22%,transparent);color:var(--good)}
+.tag.mid{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
+.tag.lo{background:color-mix(in srgb,var(--dim) 30%,transparent);color:var(--muted)}
+
+ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv:last-child{border-bottom:0} .kv .k{color:var(--muted)} .kv .v{font-family:var(--mono);text-align:right}
+.sectiontitle{font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin:2px 0 10px}
+.poslist{display:flex;flex-wrap:wrap;gap:8px}
+.poschip{background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:12px;display:flex;gap:8px;align-items:center}
+.poschip button{background:transparent;border:0;color:var(--dim);cursor:pointer;font-size:14px;padding:0}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:3px;border-radius:2px;display:inline-block}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--panel-2);
+  border:1px solid var(--line);color:var(--fg);padding:11px 16px;border-radius:12px;font-size:13px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:88vw}
+.toast.show{opacity:1}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
+.toggle input{width:40px;height:22px;appearance:none;background:var(--line);border-radius:999px;position:relative;cursor:pointer}
+.toggle input:checked{background:var(--accent)}
+.toggle input::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
+.toggle input:checked::after{left:20px}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="brand">
+      <h1>Smart Soundcheck</h1>
+      <div class="sub">Live &middot; iPad &middot; prototype</div>
+    </div>
+    <nav class="nav" id="nav" role="tablist">
+      <button role="tab" data-tab="analyzer" aria-selected="true"><span class="ic">📊</span><span>Analyzer</span></button>
+      <button role="tab" data-tab="room"><span class="ic">📐</span><span>Zaalmeting</span></button>
+      <button role="tab" data-tab="signal"><span class="ic">🔊</span><span>Testsignaal</span></button>
+      <button role="tab" data-tab="vocal"><span class="ic">🎤</span><span>Vocal &amp; advies</span></button>
+      <button role="tab" data-tab="mixer"><span class="ic">🎚️</span><span>Ui12 mixer</span></button>
+    </nav>
+    <div class="statusdot">
+      <div class="row"><span class="dot" id="s-mic"></span><span id="s-mic-t">Microfoon: uit</span></div>
+      <div class="row"><span class="dot" id="s-sr"></span><span id="s-sr-t">—</span></div>
+      <div class="row"><span class="dot off" id="s-mix"></span><span>Mixer: niet verbonden</span></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- ANALYZER -->
+    <section class="page active" id="p-analyzer" role="tabpanel">
+      <div class="phead">
+        <div><h2>Live analyzer</h2><p>Ongekalibreerd, relatief spectrum via de iPad- of USB-microfoon. 31-bands zoals de Ui12 grafische EQ. Er wordt niets naar de mixer geschreven.</p></div>
+        <span class="pill ro">Read-only</span>
+      </div>
+
+      <div class="meters" style="margin-bottom:14px">
+        <div class="metric"><div class="k">RMS niveau</div><div class="v" id="m-rms">–∞</div><div class="u">dBFS (relatief)</div></div>
+        <div class="metric"><div class="k">Piek</div><div class="v" id="m-peak">–∞</div><div class="u">dBFS</div></div>
+        <div class="metric"><div class="k">Clip</div><div class="v clip" id="m-clip">OK</div><div class="u" id="m-sr">samplerate —</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="btnrow" style="margin-bottom:12px">
+          <button class="btn primary big" id="btn-mic">▶ Start meting</button>
+          <button class="btn ghost" id="btn-demo">Demo-data</button>
+          <div style="flex:1"></div>
+          <label class="ctl" style="flex-direction:row;align-items:center;gap:8px">FFT
+            <select id="fftsize">
+              <option value="2048">2048</option>
+              <option value="4096" selected>4096</option>
+              <option value="8192">8192</option>
+              <option value="16384">16384</option>
+            </select>
+          </label>
+          <label class="ctl" style="flex-direction:row;align-items:center;gap:8px">Demping
+            <select id="smooth">
+              <option value="0">Snel</option>
+              <option value="0.6" selected>Normaal</option>
+              <option value="0.85">Traag</option>
+            </select>
+          </label>
+          <label class="toggle">Peak-hold<input type="checkbox" id="peakhold" checked></label>
+        </div>
+        <canvas id="cv-spectrum" height="300" aria-label="Spectrum"></canvas>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--bar)"></i>Live band</span>
+          <span><i class="sw" style="background:var(--cap)"></i>Peak-hold</span>
+          <span id="statustext" style="color:var(--dim)">Nog niet aan het meten</span>
+        </div>
+        <div class="hint">Zet voor een eerlijke meting ruis­onderdrukking/AGC uit — de app vraagt de mic al ongefilterd op. SPL-waarden zijn niet gekalibreerd zonder referentiemeetmicrofoon.</div>
+      </div>
+    </section>
+
+    <!-- ROOM -->
+    <section class="page" id="p-room" role="tabpanel">
+      <div class="phead">
+        <div><h2>Zaalmeting</h2><p>Meet met pink-noise via de PA op meerdere publieksposities. De app middelt de posities en stelt alléén brede, beperkte cuts voor — nooit grote boosts.</p></div>
+      </div>
+
+      <div class="grid g2">
+        <div class="panel">
+          <div class="sectiontitle">Meetposities</div>
+          <div class="btnrow" style="margin-bottom:10px">
+            <button class="btn primary" id="btn-capture" disabled>● Leg positie vast (3s)</button>
+            <button class="btn ghost" id="btn-clearpos">Wis alles</button>
+          </div>
+          <div class="poslist" id="poslist"><span class="hint">Nog geen posities. Start eerst de meting in de Analyzer, speel pink-noise via de PA en leg per publieksplek een positie vast.</span></div>
+          <div class="hint" id="cap-status"></div>
+        </div>
+        <div class="panel">
+          <div class="sectiontitle">Gemiddelde zaalcurve</div>
+          <canvas id="cv-room" height="210" aria-label="Gemiddelde zaalcurve"></canvas>
+          <div class="legend">
+            <span><i class="sw" style="background:var(--bar)"></i>Gemeten gemiddelde</span>
+            <span><i class="sw" style="background:var(--warn)"></i>Voorgestelde cuts</span>
+            <span class="toggle" style="margin-left:auto"><label class="toggle">Bypass A/B<input type="checkbox" id="bypass"></label></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="phead" style="margin-bottom:6px">
+          <div class="sectiontitle" style="margin:0">Voorgestelde GEQ-correcties (cuts only)</div>
+          <div class="btnrow">
+            <button class="btn ghost" id="btn-export">⇩ Exporteer sessie (JSON)</button>
+            <button class="btn ghost" id="btn-import">⇧ Importeer</button>
+            <input type="file" id="file-import" accept="application/json,.json" hidden>
+          </div>
+        </div>
+        <div id="suggwrap"><p class="hint">Leg minstens één positie vast om voorstellen te zien. Adviezen zijn begrensd op −6 dB, breed, en nooit automatisch toegepast.</p></div>
+        <div class="warnbox" style="margin-top:12px"><b>Let op</b> — dit is géén transfer-functie-meting. Voor echte zaalcorrectie meet je de PA met bekend testsignaal (pink-noise/sweep) vanaf meerdere posities, en vergelijk je met een huiscurve. EQ de zaal nooit blind vlak. Pas correcties alleen handmatig toe in de Ui12 na eigen beoordeling.</div>
+      </div>
+    </section>
+
+    <!-- SIGNAL -->
+    <section class="page" id="p-signal" role="tabpanel">
+      <div class="phead">
+        <div><h2>Testsignaal</h2><p>Lokaal opgewekt pink-noise en sweep. Ingedrukt-houden om te spelen; loslaten of STOP stopt direct. Begin met láág volume om feedback en gehoorschade te voorkomen.</p></div>
+      </div>
+      <div class="warnbox bad" style="margin-bottom:14px"><b>Veiligheid</b> — route de iPad-uitgang pas naar de PA als het volume laag staat. Houd je hand bij de masterfader. Bij rondzingen: direct loslaten.</div>
+      <div class="grid g2">
+        <div class="panel">
+          <div class="sectiontitle">Pink-noise</div>
+          <button class="btn big primary" id="btn-pink" style="width:100%;margin-bottom:12px">🔊 Houd ingedrukt om te spelen</button>
+          <label class="ctl">Uitgangsniveau: <span id="pink-lvl" style="font-family:var(--mono);color:var(--fg)">−24 dBFS</span>
+            <input type="range" id="pink-gain" min="-48" max="-6" step="1" value="-24"></label>
+        </div>
+        <div class="panel">
+          <div class="sectiontitle">Sine sweep (20 Hz → 20 kHz)</div>
+          <button class="btn big primary" id="btn-sweep" style="width:100%;margin-bottom:12px">🔊 Houd ingedrukt (sweep)</button>
+          <label class="ctl">Duur: <span id="sweep-dur-l" style="font-family:var(--mono);color:var(--fg)">6 s</span>
+            <input type="range" id="sweep-dur" min="2" max="20" step="1" value="6"></label>
+          <label class="ctl" style="margin-top:10px">Uitgangsniveau: <span id="sweep-lvl" style="font-family:var(--mono);color:var(--fg)">−24 dBFS</span>
+            <input type="range" id="sweep-gain" min="-48" max="-6" step="1" value="-24"></label>
+        </div>
+      </div>
+      <div class="btnrow" style="margin-top:14px"><button class="btn stop big" id="btn-stopall">■ STOP alle geluid</button>
+        <span class="hint" id="sig-status">Stil.</span></div>
+    </section>
+
+    <!-- VOCAL -->
+    <section class="page" id="p-vocal" role="tabpanel">
+      <div class="phead"><div><h2>Vocal &amp; advies</h2><p>Startpunten voor je Shure Beta-zangkanaal en de Bose L1 Pro8, plus de veilige werkvolgorde. Richtwaarden — fijn afregelen op gehoor.</p></div></div>
+      <div class="grid g2">
+        <div class="panel">
+          <div class="sectiontitle">Shure Beta zangkanaal — startpunt</div>
+          <div class="kv"><span class="k">High-pass filter (HPF)</span><span class="v">90–110 Hz</span></div>
+          <div class="kv"><span class="k">Lage mid (bodem/dreun)</span><span class="v">−2 dB @ 250–350 Hz</span></div>
+          <div class="kv"><span class="k">Neus/box</span><span class="v">−2 dB @ 450–700 Hz</span></div>
+          <div class="kv"><span class="k">Presence/verstaanbaarheid</span><span class="v">+1–2 dB @ 3–4 kHz</span></div>
+          <div class="kv"><span class="k">De-ess / sis</span><span class="v">6–8 kHz, licht</span></div>
+          <div class="kv"><span class="k">Compressor</span><span class="v">ratio 2–3:1, 3–6 dB GR</span></div>
+          <div class="hint">Beta-capsules zijn supernier: dicht inzingen, maar let op plofklanken (daarom de HPF) en spill van monitoren.</div>
+        </div>
+        <div class="panel">
+          <div class="sectiontitle">Feedback — zones om op te letten</div>
+          <div class="kv"><span class="k">Laag-mid dreun</span><span class="v">200–400 Hz</span></div>
+          <div class="kv"><span class="k">Honk / box</span><span class="v">500–800 Hz</span></div>
+          <div class="kv"><span class="k">Scherp / ring</span><span class="v">1.5–3 kHz</span></div>
+          <div class="kv"><span class="k">Fluit-feedback</span><span class="v">4–8 kHz</span></div>
+          <div class="hint">Trek bij rondzingen een smalle, beperkte cut op de ringende band — liever één nauwkeurige notch dan de boel dicht-EQ'en.</div>
+          <div class="sectiontitle" style="margin-top:16px">Bose L1 Pro8</div>
+          <div class="hint">System-EQ voorlopig handmatig via de officiële Bose L1 Mix-app (ToneMatch/scenes). Geen ongedocumenteerde Bluetooth-aansturing vanuit deze app.</div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:14px">
+        <div class="sectiontitle">Veilige werkvolgorde</div>
+        <ul class="steps">
+          <li>Bewaar eerst je bestaande Ui12-show/snapshot via de officiële mixerinterface.</li>
+          <li>Controleer dat Access Control ontgrendeld is. Deze app omzeilt een LOCKED-status nooit.</li>
+          <li>Sluit zo mogelijk een gekalibreerde meetmicrofoon aan via een class-compliant USB-interface.</li>
+          <li>Speel pink-noise via de PA en leg meerdere publieksposities vast op veilig niveau.</li>
+          <li>Beoordeel de voorgestelde brede cuts; negeer grote boosts en smalle notches zonder verificatie.</li>
+          <li>Pas aanpassingen pas handmatig toe in de Ui12 — en noteer wat je wijzigt zodat je terug kunt.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- MIXER -->
+    <section class="page" id="p-mixer" role="tabpanel">
+      <div class="phead"><div><h2>Ui12 mixer</h2><p>Snelkoppeling naar de originele Ui12-webinterface op je lokale netwerk. Deze app leest of schrijft níéts — je bedient de mixer in z'n eigen UI.</p></div><span class="pill ro">Read-only</span></div>
+      <div class="panel">
+        <label class="ctl" style="max-width:420px">Mixer-adres (lokaal netwerk)
+          <input type="text" id="mixer-addr" value="http://ui-mixer.io" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+        <div class="btnrow" style="margin-top:12px">
+          <button class="btn primary" id="btn-openmix">↗ Open Ui12-interface</button>
+          <span class="hint">Opent in een nieuw tabblad. Standaardadres: <code>http://ui-mixer.io</code> of het IP van de mixer (bv. <code>http://10.10.1.1</code>).</span>
+        </div>
+      </div>
+      <div class="warnbox" style="margin-top:14px"><b>Waarom niet ingebouwd?</b> — de Ui12 draait op <code>http://</code> in je lokale netwerk. Een beveiligde (<code>https</code>) webpagina mag zo'n onbeveiligde pagina niet in een frame tonen (mixed-content-blokkade van de browser). Daarom opent de mixer in een eigen tabblad. In de latere native iPad-app kan dit wél in één scherm (WKWebView).</div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   Smart Soundcheck — prototype web-app
+   Alles client-side. Geen externe libs, geen netwerk na laden.
+   ============================================================ */
+
+const ISO = [20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,
+  800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,20000];
+const fmtHz = hz => hz>=1000 ? (hz%1000===0?hz/1000+'k':(hz/1000).toFixed(1).replace('.0','')+'k') : String(hz);
+
+const $ = s => document.querySelector(s);
+const toastEl = $('#toast');
+let toastT;
+function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>toastEl.classList.remove('show'),2200); }
+
+/* ---------- Tabs ---------- */
+const nav = $('#nav');
+nav.addEventListener('click', e=>{
+  const b = e.target.closest('button[data-tab]'); if(!b) return;
+  nav.querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected', x===b?'true':'false'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  $('#p-'+b.dataset.tab).classList.add('active');
+});
+
+/* ============================================================
+   AUDIO ENGINE
+   ============================================================ */
+const Audio = {
+  ctx:null, analyser:null, source:null, stream:null,
+  freqBuf:null, timeBuf:null, running:false, demo:false, raf:0,
+  sampleRate:0,
+};
+
+function ensureCtx(){
+  if(!Audio.ctx){
+    Audio.ctx = new (window.AudioContext||window.webkitAudioContext)();
+  }
+  if(Audio.ctx.state==='suspended') Audio.ctx.resume();
+  return Audio.ctx;
+}
+
+async function startMic(){
+  try{
+    ensureCtx();
+    const stream = await navigator.mediaDevices.getUserMedia({audio:{
+      echoCancellation:false, noiseSuppression:false, autoGainControl:false, channelCount:1
+    }, video:false});
+    Audio.stream = stream;
+    Audio.source = Audio.ctx.createMediaStreamSource(stream);
+    setupAnalyser();
+    Audio.source.connect(Audio.analyser);
+    Audio.sampleRate = Audio.ctx.sampleRate;
+    Audio.running = true; Audio.demo=false;
+    setMicStatus('on', 'Microfoon: actief');
+    $('#m-sr').textContent = 'samplerate '+Math.round(Audio.sampleRate)+' Hz';
+    $('#s-sr').className='dot on'; $('#s-sr-t').textContent=Math.round(Audio.sampleRate/1000*10)/10+' kHz · '+$('#fftsize').value+'-pt FFT';
+    $('#statustext').textContent='Live meting (relatief, ongekalibreerd)';
+    $('#btn-mic').textContent='⏸ Stop meting';
+    $('#btn-capture').disabled=false;
+    loop();
+  }catch(err){
+    let m = err && err.name==='NotAllowedError' ? 'Microfoontoegang geweigerd — sta de mic toe in Safari.'
+          : err && err.name==='NotFoundError' ? 'Geen microfoon gevonden.'
+          : (location.protocol!=='https:' && location.hostname!=='localhost')
+            ? 'Mic vereist HTTPS. Open deze pagina via een https-adres (zie uitleg).'
+            : ('Audio kon niet starten: '+(err&&err.message||err));
+    setMicStatus('off', 'Microfoon: fout');
+    $('#statustext').textContent=m;
+    toast(m);
+  }
+}
+
+function setupAnalyser(){
+  if(!Audio.analyser) Audio.analyser = Audio.ctx.createAnalyser();
+  Audio.analyser.fftSize = parseInt($('#fftsize').value,10);
+  Audio.analyser.smoothingTimeConstant = parseFloat($('#smooth').value);
+  Audio.analyser.minDecibels=-100; Audio.analyser.maxDecibels=-10;
+  Audio.freqBuf = new Float32Array(Audio.analyser.frequencyBinCount);
+  Audio.timeBuf = new Float32Array(Audio.analyser.fftSize);
+}
+
+function stopMic(){
+  Audio.running=false; cancelAnimationFrame(Audio.raf);
+  if(capInterval){ clearInterval(capInterval); capturing=false; $('#btn-capture').disabled=true; }
+  if(Audio.source){ try{Audio.source.disconnect();}catch(e){} Audio.source=null; }
+  if(Audio.stream){ Audio.stream.getTracks().forEach(t=>t.stop()); Audio.stream=null; }
+  setMicStatus('off','Microfoon: uit');
+  $('#statustext').textContent='Meting gestopt';
+  $('#btn-mic').textContent='▶ Start meting';
+  $('#btn-capture').disabled=true;
+}
+
+function setMicStatus(cls,txt){ const d=$('#s-mic'); d.className='dot '+(cls==='on'?'on':cls==='warn'?'warnc':'off'); $('#s-mic-t').textContent=txt; }
+
+$('#btn-mic').addEventListener('click', ()=>{
+  if(Audio.running && !Audio.demo){ stopMic(); }
+  else { if(Audio.demo) stopDemo(); startMic(); }
+});
+$('#fftsize').addEventListener('change', ()=>{ if(Audio.analyser) setupAnalyser(); });
+$('#smooth').addEventListener('change', ()=>{ if(Audio.analyser) Audio.analyser.smoothingTimeConstant=parseFloat($('#smooth').value); });
+
+/* ---------- DEMO MODE (synthetische kamer, geen mic) ---------- */
+let demoT=0;
+function startDemo(){
+  if(Audio.running && !Audio.demo) stopMic();
+  Audio.demo=true; Audio.running=true;
+  setMicStatus('warn','Microfoon: DEMO (synthetisch)');
+  $('#statustext').textContent='Demo-data — geen echte microfoon';
+  $('#m-sr').textContent='samplerate 48000 Hz (demo)';
+  $('#btn-capture').disabled=false;
+  $('#btn-mic').textContent='▶ Start meting';
+  loop();
+}
+function stopDemo(){ Audio.demo=false; Audio.running=false; cancelAnimationFrame(Audio.raf); setMicStatus('off','Microfoon: uit'); }
+$('#btn-demo').addEventListener('click', ()=>{ if(Audio.demo) stopDemo(); else startDemo(); });
+
+function demoBands(){
+  demoT += 0.03;
+  // Een nep-zaal: bult rond 160 Hz, dip rond 400, resonantie bij 2k.
+  return ISO.map((hz,i)=>{
+    const l = Math.log2(hz);
+    let v = -28 - (l-4.3)*2.2;                 // aflopende helling
+    v += 7*Math.exp(-Math.pow((hz-160)/60,2)); // room-mode bult
+    v += 5*Math.exp(-Math.pow((hz-2000)/350,2));// resonantie
+    v -= 4*Math.exp(-Math.pow((hz-430)/120,2)); // dip
+    v += Math.sin(demoT*1.7+i)*1.4 + (Math.random()-0.5)*1.2;
+    return Math.max(-100, Math.min(-6, v));
+  });
+}
+
+/* ---------- Band-berekening uit FFT ---------- */
+function computeBands(){
+  if(Audio.demo) return demoBands();
+  if(!Audio.analyser) return ISO.map(()=>-100);
+  Audio.analyser.getFloatFrequencyData(Audio.freqBuf); // dB per bin
+  const sr = Audio.sampleRate||Audio.ctx.sampleRate;
+  const binHz = sr / Audio.analyser.fftSize;
+  const nbins = Audio.freqBuf.length;
+  return ISO.map(fc=>{
+    const lo = fc/Math.pow(2,1/6), hi = fc*Math.pow(2,1/6);
+    let p=0, cnt=0;
+    let i0 = Math.max(1, Math.floor(lo/binHz)), i1 = Math.min(nbins-1, Math.ceil(hi/binHz));
+    if(i1<i0) i1=i0;
+    for(let i=i0;i<=i1;i++){ const db=Audio.freqBuf[i]; if(db>-200){ p += Math.pow(10, db/10); cnt++; } }
+    if(cnt===0 || fc>sr/2) return -100;
+    return Math.max(-100, 10*Math.log10(p/cnt));
+  });
+}
+
+function computeLevels(){
+  if(Audio.demo){ const r=-30+Math.sin(demoT)*4; return {rms:r, peak:r+8, clip:false}; }
+  if(!Audio.analyser) return {rms:-100,peak:-100,clip:false};
+  Audio.analyser.getFloatTimeDomainData(Audio.timeBuf);
+  let sum=0, pk=0;
+  for(let i=0;i<Audio.timeBuf.length;i++){ const x=Audio.timeBuf[i]; sum+=x*x; const a=Math.abs(x); if(a>pk)pk=a; }
+  const rms = Math.sqrt(sum/Audio.timeBuf.length);
+  return { rms: 20*Math.log10(Math.max(rms,1e-7)), peak: 20*Math.log10(Math.max(pk,1e-7)), clip: pk>=0.985 };
+}
+
+/* ---------- Render loop ---------- */
+let peaks = ISO.map(()=>-100);
+let liveBands = ISO.map(()=>-100);
+function loop(){
+  if(!Audio.running) return;
+  liveBands = computeBands();
+  const lv = computeLevels();
+  $('#m-rms').textContent = lv.rms<=-99 ? '–∞' : lv.rms.toFixed(1);
+  $('#m-peak').textContent = lv.peak<=-99 ? '–∞' : lv.peak.toFixed(1);
+  const clipEl=$('#m-clip'); clipEl.textContent = lv.clip?'CLIP':'OK'; clipEl.className='clip'+(lv.clip?' hot':'');
+  const hold=$('#peakhold').checked;
+  for(let i=0;i<ISO.length;i++){
+    if(hold){ peaks[i] = Math.max(peaks[i]-0.4, liveBands[i]); } else peaks[i]=liveBands[i];
+  }
+  drawSpectrum();
+  Audio.raf = requestAnimationFrame(loop);
+}
+
+/* ---------- Spectrum canvas ---------- */
+function fitCanvas(cv){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const w=cv.clientWidth, h=cv.clientHeight||cv.height;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){ cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); }
+  const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w,h};
+}
+const DB_MIN=-100, DB_MAX=-6;
+const dbToY=(db,h,pad)=>{ const t=(db-DB_MIN)/(DB_MAX-DB_MIN); return h-pad - Math.max(0,Math.min(1,t))*(h-pad*1.6); };
+function cssvar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+function drawSpectrum(){
+  const cv=$('#cv-spectrum'); const {ctx,w,h}=fitCanvas(cv);
+  if(w<40||h<40) return; // tab verborgen / nog geen layout
+  ctx.clearRect(0,0,w,h);
+  const pad=22, n=ISO.length, gap=3;
+  const bw=(w-pad*0.5)/n;
+  // grid
+  ctx.strokeStyle=cssvar('--line'); ctx.fillStyle=cssvar('--dim'); ctx.font='10px var(--mono)'; ctx.lineWidth=1;
+  [-20,-40,-60,-80].forEach(db=>{ const y=dbToY(db,h,pad); ctx.globalAlpha=.5; ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke(); ctx.globalAlpha=1; ctx.fillText(db+'dB',2,y-2); });
+  for(let i=0;i<n;i++){
+    const x=i*bw+gap/2, val=liveBands[i];
+    const y=dbToY(val,h,pad), bh=(h-pad)-y;
+    const hot = val>-22;
+    ctx.fillStyle = hot?cssvar('--bar-hot'):cssvar('--bar');
+    ctx.globalAlpha = val<=-99?0.12:1;
+    roundRect(ctx,x,y,bw-gap,Math.max(1,bh),3); ctx.fill();
+    ctx.globalAlpha=1;
+    if($('#peakhold').checked && peaks[i]>-99){ const py=dbToY(peaks[i],h,pad); ctx.fillStyle=cssvar('--cap'); ctx.fillRect(x,py,bw-gap,2); }
+    if(i%3===0){ ctx.fillStyle=cssvar('--dim'); ctx.font='9px var(--mono)'; ctx.fillText(fmtHz(ISO[i]), x, h-6); }
+  }
+}
+function roundRect(ctx,x,y,w,h,r){ r=Math.max(0,Math.min(r,w/2,h/2)); ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath(); }
+
+/* ============================================================
+   ZAALMETING — capture, middelen, adviezen
+   ============================================================ */
+let positions = [];     // array van band-arrays (dB)
+let capturing=false, capInterval=0;
+const CAP_MS=3000;
+
+$('#btn-capture').addEventListener('click', startCapture);
+function startCapture(){
+  if(!Audio.running){ toast('Start eerst de meting.'); return; }
+  if(capturing) return;
+  capturing=true;
+  let capBuf=ISO.map(()=>0), capFrames=0; const capStart=performance.now();
+  $('#btn-capture').disabled=true; $('#cap-status').textContent='Vastleggen… houd pink-noise aan op de PA. 3.0s';
+  // Eigen timer (niet aan requestAnimationFrame gekoppeld): werkt ook als de
+  // render-loop even pauzeert, en leest de analyser rechtstreeks uit.
+  capInterval=setInterval(()=>{
+    const bands=computeBands();               // power-domain middeling
+    for(let i=0;i<ISO.length;i++) capBuf[i]+=Math.pow(10,bands[i]/10);
+    capFrames++;
+    const el=performance.now()-capStart;
+    $('#cap-status').textContent='Vastleggen… '+Math.max(0,(CAP_MS-el)/1000).toFixed(1)+'s';
+    if(el>=CAP_MS){
+      clearInterval(capInterval); capturing=false;
+      const avg=capBuf.map(p=>10*Math.log10(Math.max(p/Math.max(capFrames,1),1e-10)));
+      positions.push(avg);
+      $('#btn-capture').disabled=false; $('#cap-status').textContent='Positie '+positions.length+' vastgelegd.';
+      renderPositions(); renderRoom();
+    }
+  },50);
+}
+$('#btn-clearpos').addEventListener('click', ()=>{ positions=[]; renderPositions(); renderRoom(); });
+
+function renderPositions(){
+  const el=$('#poslist');
+  if(!positions.length){ el.innerHTML='<span class="hint">Nog geen posities. Start de meting, speel pink-noise via de PA en leg per publieksplek een positie vast.</span>'; return; }
+  el.innerHTML='';
+  positions.forEach((_,i)=>{ const c=document.createElement('span'); c.className='poschip';
+    c.innerHTML='Positie '+(i+1)+' <button title="verwijder" data-i="'+i+'">✕</button>'; el.appendChild(c); });
+  el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ positions.splice(+b.dataset.i,1); renderPositions(); renderRoom(); }));
+}
+
+function spatialAverage(){
+  if(!positions.length) return null;
+  return ISO.map((_,i)=>{ let p=0; positions.forEach(pos=>p+=Math.pow(10,pos[i]/10)); return 10*Math.log10(p/positions.length); });
+}
+// variatie tussen posities (dB spreiding) → vertrouwen
+function spread(i){ if(positions.length<2) return 0; const v=positions.map(p=>p[i]); const mn=Math.min(...v),mx=Math.max(...v); return mx-mn; }
+
+// gladde trend (±1 octaaf = ±3 banden) → afwijking boven trend = resonantie
+function trend(curve){
+  return curve.map((_,i)=>{ let s=0,c=0; for(let k=-3;k<=3;k++){const j=i+k; if(j>=0&&j<curve.length){s+=curve[j];c++;}} return s/c; });
+}
+const MAXCUT=6, THRESH=3.5;
+function suggestions(){
+  const avg=spatialAverage(); if(!avg) return {avg:null,sugg:[]};
+  const tr=trend(avg);
+  const sugg=[];
+  for(let i=0;i<ISO.length;i++){
+    const dev=avg[i]-tr[i];
+    if(dev>=THRESH){
+      let cut = -Math.min(MAXCUT, Math.round((dev-1)*2)/2); // begrens, afronden op 0.5
+      const sp=spread(i);
+      const conf = positions.length<2 ? 'laag' : sp<3 ? 'hoog' : sp<6 ? 'gemiddeld' : 'laag';
+      sugg.push({i, hz:ISO[i], dev:dev, cut, conf});
+    }
+  }
+  return {avg, sugg};
+}
+
+function renderRoom(){
+  renderSuggTable();
+  const cv=$('#cv-room'); const {ctx,w,h}=fitCanvas(cv);
+  if(w<40||h<40){ return; } // tab verborgen
+  ctx.clearRect(0,0,w,h);
+  const {avg,sugg}=suggestions();
+  const pad=20,n=ISO.length;
+  ctx.strokeStyle=cssvar('--line'); ctx.globalAlpha=.5;
+  [-20,-40,-60,-80].forEach(db=>{const y=dbToY(db,h,pad);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();});
+  ctx.globalAlpha=1;
+  if(!avg){ ctx.fillStyle=cssvar('--dim'); ctx.font='12px var(--sans)'; ctx.fillText('Nog geen meting',12,h/2); return; }
+  const bypass=$('#bypass').checked;
+  const corrected = avg.map((v,i)=>{ const s=sugg.find(x=>x.i===i); return bypass? v : v+(s?s.cut:0); });
+  const xOf=i=> pad + i*(w-pad*1.3)/(n-1);
+  // gemeten
+  drawCurve(ctx, avg, xOf, h, pad, cssvar('--bar'), 2, .5);
+  // gecorrigeerd/voorstel
+  if(sugg.length){ drawCurve(ctx, corrected, xOf, h, pad, cssvar('--warn'), 2, 1); }
+  // labels
+  ctx.fillStyle=cssvar('--dim'); ctx.font='9px var(--mono)';
+  for(let i=0;i<n;i+=4){ ctx.fillText(fmtHz(ISO[i]), xOf(i)-6, h-5); }
+}
+function drawCurve(ctx,data,xOf,h,pad,color,lw,alpha){
+  ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.globalAlpha=alpha; ctx.beginPath();
+  data.forEach((v,i)=>{ const x=xOf(i),y=dbToY(v,h,pad); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.stroke(); ctx.globalAlpha=1;
+}
+function renderSuggTable(){
+  const {sugg}=suggestions(); const wrap=$('#suggwrap');
+  if(!positions.length){ wrap.innerHTML='<p class="hint">Leg minstens één positie vast om voorstellen te zien. Adviezen zijn begrensd op −6 dB, breed, en nooit automatisch toegepast.</p>'; return; }
+  if(!sugg.length){ wrap.innerHTML='<p class="hint">Geen duidelijke resonanties boven +'+THRESH+' dB gevonden. De zaalcurve zit al redelijk vlak — kleine correcties liever op gehoor.</p>'; return; }
+  let html='<table><thead><tr><th>Band</th><th class="num">Afwijking</th><th class="num">Voorgestelde cut</th><th>Vertrouwen</th></tr></thead><tbody>';
+  sugg.forEach(s=>{ const t=s.conf==='hoog'?'hi':s.conf==='gemiddeld'?'mid':'lo';
+    html+='<tr><td>'+fmtHz(s.hz)+' Hz</td><td class="num">+'+s.dev.toFixed(1)+' dB</td><td class="num">'+s.cut.toFixed(1)+' dB</td><td><span class="tag '+t+'">'+s.conf+'</span></td></tr>'; });
+  html+='</tbody></table>';
+  if(positions.length<2) html+='<div class="hint">Slechts één positie — vertrouwen blijft laag. Meet 3–5 publieksplekken voor een betrouwbaar gemiddelde.</div>';
+  wrap.innerHTML=html;
+}
+
+/* ---------- Sessie export / import ---------- */
+$('#btn-export').addEventListener('click', ()=>{
+  const data={ app:'Smart Soundcheck', versie:1, datum:new Date().toISOString(),
+    iso:ISO, posities:positions, voorstellen:suggestions().sugg, gemiddelde:spatialAverage() };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download='soundcheck-sessie-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+  toast('Sessie geëxporteerd.');
+});
+$('#btn-import').addEventListener('click', ()=>$('#file-import').click());
+$('#file-import').addEventListener('change', e=>{
+  const f=e.target.files[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{ const d=JSON.parse(r.result); if(Array.isArray(d.posities)){ positions=d.posities; renderPositions(); renderRoom(); toast('Sessie geladen ('+positions.length+' posities).'); } else toast('Geen posities in bestand.'); }
+    catch(err){ toast('Kon JSON niet lezen.'); } };
+  r.readAsText(f); e.target.value='';
+});
+try{ const saved=localStorage.getItem('ssc_positions'); if(saved){ positions=JSON.parse(saved); } }catch(e){}
+window.addEventListener('beforeunload',()=>{ try{ localStorage.setItem('ssc_positions',JSON.stringify(positions)); }catch(e){} });
+
+/* ============================================================
+   TESTSIGNAAL — pink-noise + sweep, hold-to-play
+   ============================================================ */
+const Sig = { gain:null, pinkBuf:null, pinkSrc:null, osc:null, playing:null };
+function sigGain(){ if(!Sig.gain){ ensureCtx(); Sig.gain=Audio.ctx.createGain(); Sig.gain.gain.value=0; Sig.gain.connect(Audio.ctx.destination); } return Sig.gain; }
+function makePink(){ if(Sig.pinkBuf) return Sig.pinkBuf; ensureCtx();
+  const len=Audio.ctx.sampleRate*4; const buf=Audio.ctx.createBuffer(1,len,Audio.ctx.sampleRate); const d=buf.getChannelData(0);
+  let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+  for(let i=0;i<len;i++){ const w=Math.random()*2-1;
+    b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759; b2=0.96900*b2+w*0.1538520;
+    b3=0.86650*b3+w*0.3104856; b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980;
+    d[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11; b6=w*0.115926; }
+  Sig.pinkBuf=buf; return buf;
+}
+function stopAll(){
+  if(Sig.gain){ const t=Audio.ctx.currentTime; Sig.gain.gain.cancelScheduledValues(t); Sig.gain.gain.setValueAtTime(Sig.gain.gain.value,t); Sig.gain.gain.linearRampToValueAtTime(0,t+0.03); }
+  setTimeout(()=>{ if(Sig.pinkSrc){try{Sig.pinkSrc.stop();}catch(e){} Sig.pinkSrc=null;} if(Sig.osc){try{Sig.osc.stop();}catch(e){} Sig.osc=null;} },40);
+  Sig.playing=null; $('#sig-status').textContent='Stil.';
+}
+function dbToGain(db){ return Math.pow(10, db/20); }
+function playPink(){ if(Sig.playing) return; ensureCtx(); const g=sigGain(); const src=Audio.ctx.createBufferSource();
+  src.buffer=makePink(); src.loop=true; src.connect(g); src.start(); Sig.pinkSrc=src; Sig.playing='pink';
+  const t=Audio.ctx.currentTime; const target=dbToGain(parseFloat($('#pink-gain').value));
+  g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(Math.max(target,0.0002),t+0.25);
+  $('#sig-status').textContent='Pink-noise speelt…';
+}
+function playSweep(){ if(Sig.playing) return; ensureCtx(); const g=sigGain(); const o=Audio.ctx.createOscillator(); o.type='sine';
+  const dur=parseFloat($('#sweep-dur').value); const t=Audio.ctx.currentTime;
+  o.frequency.setValueAtTime(20,t); o.frequency.exponentialRampToValueAtTime(20000,t+dur);
+  o.connect(g); o.start(); Sig.osc=o; Sig.playing='sweep';
+  const target=dbToGain(parseFloat($('#sweep-gain').value));
+  g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(Math.max(target,0.0002),t+0.1);
+  o.onended=()=>{ if(Sig.playing==='sweep') stopAll(); };
+  $('#sig-status').textContent='Sweep speelt…';
+}
+function holdBtn(el, startFn){
+  const start=e=>{ e.preventDefault(); startFn(); };
+  const end=e=>{ e.preventDefault(); stopAll(); };
+  el.addEventListener('pointerdown',start); el.addEventListener('pointerup',end);
+  el.addEventListener('pointerleave',end); el.addEventListener('pointercancel',end);
+}
+holdBtn($('#btn-pink'), playPink);
+holdBtn($('#btn-sweep'), playSweep);
+$('#btn-stopall').addEventListener('click', stopAll);
+$('#pink-gain').addEventListener('input', e=>{ $('#pink-lvl').textContent=e.target.value+' dBFS'; if(Sig.playing==='pink'&&Sig.gain){ const t=Audio.ctx.currentTime; Sig.gain.gain.linearRampToValueAtTime(dbToGain(+e.target.value),t+0.05);} });
+$('#sweep-gain').addEventListener('input', e=>{ $('#sweep-lvl').textContent=e.target.value+' dBFS'; });
+$('#sweep-dur').addEventListener('input', e=>{ $('#sweep-dur-l').textContent=e.target.value+' s'; });
+
+/* ============================================================
+   MIXER launcher
+   ============================================================ */
+$('#btn-openmix').addEventListener('click', ()=>{
+  let a=$('#mixer-addr').value.trim(); if(!/^https?:\/\//i.test(a)) a='http://'+a;
+  window.open(a,'_blank','noopener');
+});
+
+/* init */
+renderPositions(); renderRoom();
+window.addEventListener('resize', ()=>{ drawSpectrum(); renderRoom(); });
+</script>
+</body>
+</html>
