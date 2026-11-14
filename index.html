@@ -177,6 +177,7 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
     </div>
     <nav class="nav" id="nav" role="tablist">
       <button role="tab" data-tab="dashboard" aria-selected="true"><span class="ic">🎛️</span><span>Dashboard</span></button>
+      <button role="tab" data-tab="gear"><span class="ic">🧰</span><span>Installatie</span></button>
       <button role="tab" data-tab="signal"><span class="ic">🔊</span><span>Testsignaal</span></button>
       <button role="tab" data-tab="vocal"><span class="ic">🎤</span><span>Vocal &amp; advies</span></button>
       <button role="tab" data-tab="mixer"><span class="ic">🎚️</span><span>Ui12 mixer</span></button>
@@ -193,8 +194,8 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
     <!-- DASHBOARD -->
     <section class="page active" id="p-dashboard" role="tabpanel">
       <div class="phead">
-        <div><h2>Dashboard</h2><p>Eén overzicht: live niveaus, 31-bands spectrum en de sweep-scan installatie → zaal → microfoon, met meetwaardes. Relatief en ongekalibreerd — er wordt niets naar de mixer geschreven.</p></div>
-        <span class="pill ro">Read-only</span>
+        <div><h2>Dashboard</h2><p>Eén overzicht: live niveaus, 31-bands spectrum en de sweep-scan installatie → zaal → microfoon, met meetwaardes. Relatief en ongekalibreerd.</p></div>
+        <span class="pill" id="dgearpill">—</span>
       </div>
 
       <div class="meters">
@@ -233,9 +234,10 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
             </div>
             <canvas class="js-spectrum" id="cv-spectrum-db" height="250" aria-label="Live spectrum"></canvas>
             <div class="legend">
-              <span><i class="sw" style="background:var(--bar)"></i>Live 31-bands</span>
+              <span><i class="sw" style="width:28px;background:linear-gradient(90deg,#e0603a,#8bd450,#2cc5e0,#8a7be6)"></i>Live 31-bands</span>
               <span><i class="sw" style="background:var(--cap)"></i>Peak-hold</span>
               <span id="dstatustext" style="color:var(--dim)">Nog niet aan het meten</span>
+              <span id="dsysrange" style="margin-left:auto;color:var(--dim)"></span>
             </div>
           </div>
 
@@ -243,8 +245,9 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
             <div class="sectiontitle">Gemiddelde zaalcurve + voorgestelde cuts</div>
             <canvas class="js-room" id="cv-room-db" height="190" aria-label="Zaalcurve"></canvas>
             <div class="legend">
-              <span><i class="sw" style="background:var(--bar)"></i>Gemeten gemiddelde</span>
+              <span><i class="sw" style="background:var(--cyan)"></i>Gemeten gemiddelde</span>
               <span><i class="sw" style="background:var(--warn)"></i>Met cuts</span>
+              <span><i class="sw" style="background:var(--bad);width:6px;height:6px;border-radius:50%"></i>Resonantie</span>
               <label class="toggle" style="margin-left:auto">Bypass A/B<input type="checkbox" id="bypass"></label>
             </div>
           </div>
@@ -306,6 +309,49 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
       </div>
 
       <div class="warnbox" style="margin-top:14px"><b>Let op</b> — dit is géén transfer-functie-meting met gekalibreerde referentie. Gebruik de waardes als richting, niet als absolute waarheid. Pas correcties altijd handmatig toe in de Ui12 ná eigen beoordeling; grote boosts en smalle notches zonder verificatie negeren.</div>
+    </section>
+
+    <!-- GEAR / INSTALLATIE -->
+    <section class="page" id="p-gear" role="tabpanel">
+      <div class="phead">
+        <div><h2>Installatie</h2><p>Jouw vaste rig. Geef merk &amp; type aan — de app bewaart het en gebruikt het systeembereik van de speaker om zinloze banden in het spectrum te dimmen. Specs zijn opgezocht uit fabrikant-/dealerdata (richtwaarden).</p></div>
+        <div class="btnrow">
+          <button class="btn sm primary" id="g-save">Opslaan</button>
+          <button class="btn sm ghost" id="g-reset">Standaard terug</button>
+        </div>
+      </div>
+
+      <div class="grid g2">
+        <div class="panel" style="--sc:var(--cyan);border-left:3px solid var(--sc)">
+          <div class="sectiontitle" style="color:var(--sc)">🔈 Speaker / PA</div>
+          <label class="ctl" style="margin-bottom:10px">Merk &amp; type<input type="text" id="g-spk-naam"></label>
+          <div class="btnrow" style="margin-bottom:10px">
+            <label class="ctl" style="flex:1">Laag (Hz)<input type="number" id="g-spk-lo" min="20" max="200" step="1"></label>
+            <label class="ctl" style="flex:1">Hoog (Hz)<input type="number" id="g-spk-hi" min="2000" max="22000" step="100"></label>
+          </div>
+          <div id="g-spk-rows"></div>
+        </div>
+
+        <div class="panel" style="--sc:var(--accent);border-left:3px solid var(--sc)">
+          <div class="sectiontitle" style="color:var(--sc)">🎚️ Mixer</div>
+          <label class="ctl" style="margin-bottom:10px">Merk &amp; type<input type="text" id="g-mix-naam"></label>
+          <div id="g-mix-rows"></div>
+        </div>
+
+        <div class="panel" style="--sc:var(--violet);border-left:3px solid var(--sc)">
+          <div class="sectiontitle" style="color:var(--sc)">🎤 Microfoon (capsule)</div>
+          <label class="ctl" style="margin-bottom:10px">Merk &amp; type<input type="text" id="g-mic-naam"></label>
+          <div id="g-mic-rows"></div>
+        </div>
+
+        <div class="panel" style="--sc:var(--pink);border-left:3px solid var(--sc)">
+          <div class="sectiontitle" style="color:var(--sc)">📡 Draadloos systeem</div>
+          <label class="ctl" style="margin-bottom:10px">Merk &amp; type<input type="text" id="g-rf-naam"></label>
+          <div id="g-rf-rows"></div>
+        </div>
+      </div>
+
+      <div class="warnbox" style="margin-top:14px"><b>Frequentieband 606–670 MHz</b> — dit valt in de 600 MHz-band. Of (en waar) je die legaal mag gebruiken verschilt per land en regeling; check je eigen vergunning/band-plan. Geen juridisch advies vanuit deze app.</div>
     </section>
 
     <!-- SIGNAL -->
@@ -603,8 +649,9 @@ function drawSpectrumTo(cv){
     const x=i*bw+gap/2, val=liveBands[i];
     const y=dbToY(val,h,pad), bh=(h-pad)-y;
     const hot = val>-22;
+    const outRange = (GEAR.spk.lo && ISO[i]<GEAR.spk.lo) || (GEAR.spk.hi && ISO[i]>GEAR.spk.hi);
     ctx.fillStyle = bandColor(i,hot);
-    ctx.globalAlpha = val<=-99?0.12:1;
+    ctx.globalAlpha = (val<=-99?0.12:1) * (outRange?0.28:1);
     roundRect(ctx,x,y,bw-gap,Math.max(1,bh),3); ctx.fill();
     ctx.globalAlpha=1;
     if(hold && peaks[i]>-99){ const py=dbToY(peaks[i],h,pad); ctx.fillStyle=cssvar('--cap'); ctx.fillRect(x,py,bw-gap,2); }
@@ -869,8 +916,73 @@ $('#btn-openmix').addEventListener('click', ()=>{
   window.open(a,'_blank','noopener');
 });
 
+/* ============================================================
+   INSTALLATIE / GEAR — specs opgezocht, lokaal opgeslagen
+   ============================================================ */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+const GEAR_DEFAULT = {
+  spk:{ naam:'Bose L1 Pro8', lo:45, hi:16000, rows:[
+    ['Frequentiebereik','45 Hz – 16 kHz (−3 dB)'],
+    ['Uitgebreid','33 Hz – 18 kHz (−10 dB)'],
+    ['Max SPL','112 dB continu · 118 dB piek @1m'],
+    ['Spreiding','180° horizontaal · 40° verticaal'],
+    ['Crossover','200 Hz'],
+    ['Vermogen','240 W LF + 60 W HF-array'] ]},
+  mix:{ naam:'Soundcraft Ui12', rows:[
+    ['Kanalen','12 in — 4 combo, 4 XLR, 2 Hi-Z, 1 st. RCA'],
+    ['Frequentiebereik','20 Hz – 20 kHz ±0.25 dB'],
+    ['Aux-bussen','2× gebalanceerd XLR'],
+    ['Effecten','3 Lexicon-buses (reverb/delay/chorus)'],
+    ['EQ','31-bands GEQ op uitgangen'] ]},
+  mic:{ naam:'Shure KSM9 (capsule)', lo:50, hi:20000, rows:[
+    ['Type','Condensator, dual-pattern'],
+    ['Patroon','Cardioïde / supercardioïde (schakelbaar)'],
+    ['Frequentiebereik','50 Hz – 20 kHz'],
+    ['Max SPL','152 dB'],
+    ['Gevoeligheid','−51 dBV/Pa'],
+    ['Eigenruis','22 dB SPL-A'],
+    ['Uitgangsimpedantie','150 Ω'] ]},
+  rf:{ naam:'Shure QLXD24E/KSM9', rows:[
+    ['Band','K51 · 606–670 MHz'],
+    ['Schakelbandbreedte','tot 72 MHz'],
+    ['Kanalen','~22 compatibel per 8 MHz TV-band'],
+    ['Type','Digitaal draadloos (QLXD2 zender + QLXD4 ontvanger)'],
+    ['Let op','600 MHz-band — licentie/gebruik verschilt per land'] ]}
+};
+let GEAR = clone(GEAR_DEFAULT);
+try{ const s=localStorage.getItem('ssc_gear'); if(s){ const o=JSON.parse(s);
+  ['spk','mix','mic','rf'].forEach(k=>{ if(o[k]){ if(o[k].naam)GEAR[k].naam=o[k].naam; if('lo' in o[k])GEAR[k].lo=o[k].lo; if('hi' in o[k])GEAR[k].hi=o[k].hi; } });
+}}catch(e){}
+
+function gearRows(rows){ return rows.map(r=>'<div class="kv"><span class="k">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>').join(''); }
+function renderGear(){
+  if($('#g-spk-naam')){ $('#g-spk-naam').value=GEAR.spk.naam; $('#g-spk-lo').value=GEAR.spk.lo; $('#g-spk-hi').value=GEAR.spk.hi;
+    $('#g-mix-naam').value=GEAR.mix.naam; $('#g-mic-naam').value=GEAR.mic.naam; $('#g-rf-naam').value=GEAR.rf.naam;
+    $('#g-spk-rows').innerHTML=gearRows(GEAR.spk.rows);
+    $('#g-mix-rows').innerHTML=gearRows(GEAR.mix.rows);
+    $('#g-mic-rows').innerHTML=gearRows(GEAR.mic.rows);
+    $('#g-rf-rows').innerHTML=gearRows(GEAR.rf.rows); }
+  setText(['#dsysrange'], 'Systeembereik '+fmtHz(GEAR.spk.lo)+' Hz – '+fmtHz(GEAR.spk.hi));
+  const pill=$('#dgearpill'); if(pill) pill.textContent=GEAR.spk.naam;
+  drawSpectrum();
+}
+function saveGear(){
+  GEAR.spk.naam=$('#g-spk-naam').value.trim()||GEAR.spk.naam;
+  GEAR.spk.lo=Math.max(20,Math.min(200,parseInt($('#g-spk-lo').value,10)||GEAR.spk.lo));
+  GEAR.spk.hi=Math.max(2000,Math.min(22000,parseInt($('#g-spk-hi').value,10)||GEAR.spk.hi));
+  GEAR.mix.naam=$('#g-mix-naam').value.trim()||GEAR.mix.naam;
+  GEAR.mic.naam=$('#g-mic-naam').value.trim()||GEAR.mic.naam;
+  GEAR.rf.naam=$('#g-rf-naam').value.trim()||GEAR.rf.naam;
+  try{ localStorage.setItem('ssc_gear', JSON.stringify({
+    spk:{naam:GEAR.spk.naam,lo:GEAR.spk.lo,hi:GEAR.spk.hi}, mix:{naam:GEAR.mix.naam},
+    mic:{naam:GEAR.mic.naam}, rf:{naam:GEAR.rf.naam} })); }catch(e){}
+  renderGear(); toast('Installatie opgeslagen.');
+}
+const gSave=$('#g-save'); if(gSave) gSave.addEventListener('click', saveGear);
+const gReset=$('#g-reset'); if(gReset) gReset.addEventListener('click', ()=>{ GEAR=clone(GEAR_DEFAULT); try{localStorage.removeItem('ssc_gear');}catch(e){} renderGear(); toast('Standaard-installatie hersteld.'); });
+
 /* init */
-renderPositions(); renderRoom(); renderScan(); updateScanDisabled();
+renderPositions(); renderRoom(); renderScan(); updateScanDisabled(); renderGear();
 window.addEventListener('resize', ()=>{ drawSpectrum(); renderRoom(); });
 </script>
 </body>
