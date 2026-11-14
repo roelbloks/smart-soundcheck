@@ -204,7 +204,11 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
         <div class="metric c3"><div class="k">Clip</div><div class="v clip" id="dm-clip">OK</div><div class="u" id="dm-sr">samplerate —</div></div>
         <div class="metric c4"><div class="k">Zaalposities</div><div class="v" id="dm-pos">0</div><div class="u">vastgelegd</div></div>
         <div class="metric c5"><div class="k">Resonanties</div><div class="v" id="dm-res">—</div><div class="u">boven trend</div></div>
-        <div class="metric c6"><div class="k">Feedback-kans</div><div class="v" id="dm-fb">—</div><div class="u">mic-scan</div></div>
+        <div class="metric c6"><div class="k">Feedback-kans</div><div class="v" id="dm-fb">—</div><div class="u" id="dm-fb-u">mic-scan</div></div>
+      </div>
+
+      <div id="fb-banner" class="warnbox bad" style="display:none;margin-top:12px">
+        <b>⚠ Mogelijke feedback</b> — aanhoudende piek rond <b id="fb-hz">—</b>. Trek daar een smalle, beperkte cut, of zet het monitorniveau iets lager.
       </div>
 
       <div class="dash-cols" style="margin-top:14px">
@@ -242,12 +246,23 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
           </div>
 
           <div class="panel">
-            <div class="sectiontitle">Gemiddelde zaalcurve + voorgestelde cuts</div>
+            <div class="phead" style="margin-bottom:8px">
+              <div class="sectiontitle" style="margin:0">Zaalcurve &amp; doelcurve</div>
+              <label class="ctl" style="flex-direction:row;align-items:center;gap:7px">Doel
+                <select id="house">
+                  <option value="trend" selected>Trend (vlak t.o.v. zichzelf)</option>
+                  <option value="flat">Vlak (neutraal)</option>
+                  <option value="warm">Warm (zachte hoog-afbouw)</option>
+                  <option value="bright">Helder (iets meer hoog)</option>
+                </select>
+              </label>
+            </div>
             <canvas class="js-room" id="cv-room-db" height="190" aria-label="Zaalcurve"></canvas>
             <div class="legend">
-              <span><i class="sw" style="background:var(--cyan)"></i>Gemeten gemiddelde</span>
+              <span><i class="sw" style="background:var(--cyan)"></i>Gemeten</span>
+              <span><i class="sw" style="background:var(--violet);border-top:1px dashed var(--violet)"></i>Doelcurve</span>
               <span><i class="sw" style="background:var(--warn)"></i>Met cuts</span>
-              <span><i class="sw" style="background:var(--bad);width:6px;height:6px;border-radius:50%"></i>Resonantie</span>
+              <span><i class="sw" style="background:var(--bad);width:6px;height:6px;border-radius:50%"></i>Afwijking</span>
               <label class="toggle" style="margin-left:auto">Bypass A/B<input type="checkbox" id="bypass"></label>
             </div>
           </div>
@@ -292,6 +307,16 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
             <label class="ctl">Uitgangsniveau: <span id="dpink-lvl" style="font-family:var(--mono);color:var(--fg)">−24 dBFS</span>
               <input type="range" id="dpink-gain" min="-48" max="-6" step="1" value="-24"></label>
             <div class="hint">Begin láág en route pas naar de PA bij laag volume. Sweep en meer opties staan onder <b>Testsignaal</b>.</div>
+          </div>
+
+          <div class="panel">
+            <div class="sectiontitle">Nagalm (RT60-schatting)</div>
+            <div class="btnrow" style="margin-bottom:8px">
+              <button class="btn sm js-rt60" disabled>● Meet nagalm</button>
+              <span class="hint" id="rt60-status" style="margin:0">Speel pink-noise via de PA, druk Meet, en stop de noise.</span>
+            </div>
+            <div class="scanvals" id="rt60-vals"></div>
+            <div class="hint">Onderbroken-ruis-methode: de app volgt het afvallen van het niveau nadat je de pink-noise stopt en schat daaruit de nagalmtijd. Ruwe indicatie, geen gekalibreerde RT60.</div>
           </div>
 
           <div class="panel">
@@ -382,10 +407,19 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
 
     <!-- VOCAL -->
     <section class="page" id="p-vocal" role="tabpanel">
-      <div class="phead"><div><h2>Vocal &amp; advies</h2><p>Startpunten voor je Shure Beta-zangkanaal en de Bose L1 Pro8, plus de veilige werkvolgorde. Richtwaarden — fijn afregelen op gehoor.</p></div></div>
+      <div class="phead"><div><h2>Vocal &amp; advies</h2><p>Startpunten voor je Shure KSM9-zangkanaal en de Bose L1 Pro8, plus de veilige werkvolgorde. Richtwaarden — fijn afregelen op gehoor.</p></div></div>
+
+      <div class="panel" style="--sc:var(--violet);border-left:3px solid var(--sc);margin-bottom:14px">
+        <div class="phead" style="margin-bottom:6px">
+          <div class="sectiontitle" style="margin:0;color:var(--sc)">🎤 Gegenereerd uit je mic-scan</div>
+          <span class="hint" id="vocgen-src" style="margin:0"></span>
+        </div>
+        <div id="vocgen"><p class="hint" style="margin:0">Doe eerst stap 3 (microfoon) op het dashboard: zing gelijkmatig in de KSM9. Dan reken ik hier concrete Ui12-startwaarden uit — HPF, probleem-cuts, presence, de-ess en compressor.</p></div>
+      </div>
+
       <div class="grid g2">
         <div class="panel">
-          <div class="sectiontitle">Shure Beta zangkanaal — startpunt</div>
+          <div class="sectiontitle">Shure KSM9 zangkanaal — startpunt</div>
           <div class="kv"><span class="k">High-pass filter (HPF)</span><span class="v">90–110 Hz</span></div>
           <div class="kv"><span class="k">Lage mid (bodem/dreun)</span><span class="v">−2 dB @ 250–350 Hz</span></div>
           <div class="kv"><span class="k">Neus/box</span><span class="v">−2 dB @ 450–700 Hz</span></div>
@@ -532,7 +566,7 @@ function stopMic(){
   setMicStatus('off','Microfoon: uit');
   setStatus('Meting gestopt');
   setMicBtns('▶ Start meting');
-  updateScanDisabled();
+  updateScanDisabled(); resetFeedback();
 }
 
 function setMicStatus(cls,txt){ const d=$('#s-mic'); d.className='dot '+(cls==='on'?'on':cls==='warn'?'warnc':'off'); $('#s-mic-t').textContent=txt; }
@@ -558,7 +592,7 @@ function startDemo(){
   updateScanDisabled();
   loop();
 }
-function stopDemo(){ Audio.demo=false; Audio.running=false; cancelAnimationFrame(Audio.raf); setMicStatus('off','Microfoon: uit'); setMicBtns('▶ Start meting'); updateScanDisabled(); }
+function stopDemo(){ Audio.demo=false; Audio.running=false; cancelAnimationFrame(Audio.raf); setMicStatus('off','Microfoon: uit'); setMicBtns('▶ Start meting'); updateScanDisabled(); resetFeedback(); }
 
 function demoBands(){
   demoT += 0.03;
@@ -617,6 +651,7 @@ function loop(){
   for(let i=0;i<ISO.length;i++){
     if(hold){ peaks[i] = Math.max(peaks[i]-0.4, liveBands[i]); } else peaks[i]=liveBands[i];
   }
+  detectFeedback();
   drawSpectrum();
   Audio.raf = requestAnimationFrame(loop);
 }
@@ -667,12 +702,13 @@ function roundRect(ctx,x,y,w,h,r){ r=Math.max(0,Math.min(r,w/2,h/2)); ctx.beginP
 let positions = [];              // zaalmeting: array van band-arrays (dB)
 const scan = { install:null, mic:null };
 let capturing=false, capInterval=0;
+let rt60Busy=false;
 const CAP_MS=3000;
 const KIND_LABEL = { install:'installatie', zaal:'zaalpositie', mic:'microfoon' };
 
 function updateScanDisabled(){
-  const off = !Audio.running || capturing;
-  document.querySelectorAll('.js-scan').forEach(x=>x.disabled=off);
+  const off = !Audio.running || capturing || rt60Busy;
+  document.querySelectorAll('.js-scan, .js-rt60').forEach(x=>x.disabled=off);
 }
 function capStatus(t){ setText(['#dcap-status'], t); }
 
@@ -728,12 +764,26 @@ function trend(curve){
   return curve.map((_,i)=>{ let s=0,c=0; for(let k=-3;k<=3;k++){const j=i+k; if(j>=0&&j<curve.length){s+=curve[j];c++;}} return s/c; });
 }
 const MAXCUT=6, THRESH=3.5;
+// Referentie om tegen te vergelijken: óf de eigen trend, óf een doel-/huiscurve.
+function referenceCurve(avg){
+  const mode = ($('#house') && $('#house').value) || 'trend';
+  if(mode==='trend') return {ref:trend(avg), target:null, mode};
+  const shape = ISO.map(hz=>{
+    if(mode==='warm')   return hz>1000 ? -1.0*Math.log2(hz/1000) : 0;   // zachte hoog-afbouw
+    if(mode==='bright') return hz>2000 ?  0.7*Math.log2(hz/2000) : 0;   // iets meer hoog
+    return 0;                                                           // vlak
+  });
+  const mA=avg.reduce((s,v)=>s+v,0)/avg.length;
+  const mS=shape.reduce((s,v)=>s+v,0)/shape.length;
+  const target=shape.map(v=>v+(mA-mS));   // op het gemiddelde niveau leggen
+  return {ref:target, target, mode};
+}
 function suggestions(){
-  const avg=spatialAverage(); if(!avg) return {avg:null,sugg:[]};
-  const tr=trend(avg);
+  const avg=spatialAverage(); if(!avg) return {avg:null,sugg:[],target:null};
+  const {ref,target}=referenceCurve(avg);
   const sugg=[];
   for(let i=0;i<ISO.length;i++){
-    const dev=avg[i]-tr[i];
+    const dev=avg[i]-ref[i];
     if(dev>=THRESH){
       let cut = -Math.min(MAXCUT, Math.round((dev-1)*2)/2); // begrens, afronden op 0.5
       const sp=spread(i);
@@ -741,17 +791,17 @@ function suggestions(){
       sugg.push({i, hz:ISO[i], dev:dev, cut, conf});
     }
   }
-  return {avg, sugg};
+  return {avg, sugg, target};
 }
 
 /* ---------- Zaalcurve canvas ---------- */
 function anyBypass(){ const b=$('#bypass'); return b?b.checked:false; }
 function renderRoom(){
   renderSuggTable();
-  const {avg,sugg}=suggestions();
-  document.querySelectorAll('canvas.js-room').forEach(cv=>drawRoomTo(cv,avg,sugg));
+  const {avg,sugg,target}=suggestions();
+  document.querySelectorAll('canvas.js-room').forEach(cv=>drawRoomTo(cv,avg,sugg,target));
 }
-function drawRoomTo(cv,avg,sugg){
+function drawRoomTo(cv,avg,sugg,target){
   const {ctx,w,h}=fitCanvas(cv);
   if(w<40||h<40){ return; } // tab verborgen
   ctx.clearRect(0,0,w,h);
@@ -763,6 +813,8 @@ function drawRoomTo(cv,avg,sugg){
   const bypass=anyBypass();
   const corrected = avg.map((v,i)=>{ const s=sugg.find(x=>x.i===i); return bypass? v : v+(s?s.cut:0); });
   const xOf=i=> pad + i*(w-pad*1.3)/(n-1);
+  // doelcurve (gestippeld violet) wanneer een huiscurve is gekozen
+  if(target){ ctx.setLineDash([5,4]); drawCurve(ctx, target, xOf, h, pad, cssvar('--violet'), 2, .9); ctx.setLineDash([]); }
   drawCurve(ctx, avg, xOf, h, pad, cssvar('--cyan'), 2, .55);
   if(sugg.length){ drawCurve(ctx, corrected, xOf, h, pad, cssvar('--warn'), 2, 1);
     ctx.fillStyle=cssvar('--bad'); sugg.forEach(s=>{ const x=xOf(s.i), y=dbToY(avg[s.i],h,pad); ctx.beginPath(); ctx.arc(x,y,3.5,0,Math.PI*2); ctx.fill(); }); }
@@ -775,6 +827,111 @@ function drawCurve(ctx,data,xOf,h,pad,color,lw,alpha){
   ctx.stroke(); ctx.globalAlpha=1;
 }
 ['#bypass'].forEach(s=>{ const e=$(s); if(e) e.addEventListener('change', renderRoom); });
+{ const h=$('#house'); if(h) h.addEventListener('change', ()=>{ renderRoom(); renderScan(); }); }
+
+/* ---------- Groep-niveau (power-middeling binnen een band) ---------- */
+function groupDb(bands,lo,hi){ let p=0,c=0; for(let i=0;i<ISO.length;i++){ if(ISO[i]>=lo&&ISO[i]<hi){ p+=Math.pow(10,bands[i]/10); c++; } } return c? 10*Math.log10(p/c) : -100; }
+
+/* ---------- Live feedback-detector ---------- */
+let ringCount = ISO.map(()=>0);
+function detectFeedback(){
+  let ringIdx=-1, best=0;
+  for(let i=0;i<ISO.length;i++){
+    if(ISO[i]<250 || liveBands[i]<=-99){ ringCount[i]=0; continue; }
+    let s=0,c=0; for(let k=-2;k<=2;k++){ if(k===0)continue; const j=i+k; if(j>=0&&j<ISO.length&&liveBands[j]>-99){ s+=liveBands[j]; c++; } }
+    const nb = c? s/c : -100;
+    const prom = liveBands[i]-nb;            // uitsteken boven de buren
+    if(prom>12 && liveBands[i]>-45){ ringCount[i]=Math.min(ringCount[i]+1,30); }
+    else { ringCount[i]=Math.max(ringCount[i]-2,0); }
+    if(ringCount[i]>=6 && ringCount[i]>best){ best=ringCount[i]; ringIdx=i; }
+  }
+  const banner=$('#fb-banner'), tile=$('#dm-fb'), tileU=$('#dm-fb-u');
+  if(ringIdx>=0){
+    const hz=fmtHz(ISO[ringIdx])+' Hz';
+    if(banner){ banner.style.display='block'; const h=$('#fb-hz'); if(h) h.textContent=hz; }
+    if(tile){ tile.textContent=hz; tile.style.color='var(--bad)'; }
+    if(tileU) tileU.textContent='LIVE ring';
+  } else {
+    if(banner) banner.style.display='none';
+    if(tile){ tile.style.color=''; tile.textContent = scan.mic ? fmtHz(ISO[argmaxBand(scan.mic,500)])+' Hz' : '—'; }
+    if(tileU) tileU.textContent='mic-scan';
+  }
+}
+function resetFeedback(){
+  ringCount = ISO.map(()=>0);
+  const banner=$('#fb-banner'); if(banner) banner.style.display='none';
+  const tile=$('#dm-fb'); if(tile) tile.style.color='';
+  const tileU=$('#dm-fb-u'); if(tileU) tileU.textContent='mic-scan';
+  renderScan();
+}
+
+/* ---------- RT60 (onderbroken-ruis-schatting) ---------- */
+let rt60Timer=0, rt60Data=[];
+const RT60_MS=4000;
+document.querySelectorAll('.js-rt60').forEach(b=>b.addEventListener('click', startRt60));
+function startRt60(){
+  if(!Audio.running){ toast('Start eerst de meting.'); return; }
+  if(rt60Timer) return;
+  rt60Data=[]; rt60Busy=true; updateScanDisabled();
+  const t0=performance.now();
+  rt60Timer=setInterval(()=>{
+    const bands=computeBands();
+    const t=(performance.now()-t0)/1000;
+    rt60Data.push({t, bands});
+    setText(['#rt60-status'],'Opname… stop nu de pink-noise. '+Math.max(0,(RT60_MS-(t*1000))/1000).toFixed(1)+'s');
+    if(t*1000>=RT60_MS){ clearInterval(rt60Timer); rt60Timer=0; rt60Busy=false; updateScanDisabled(); analyzeRt60(); }
+  },50);
+}
+function fitRt60(series){
+  if(series.length<6) return null;
+  let pk=-999, pi=0; series.forEach((s,i)=>{ if(s.db>pk){pk=s.db;pi=i;} });
+  const top=pk-5, bot=pk-25;                       // T20-venster
+  const seg=series.slice(pi).filter(s=>s.db<=top && s.db>=bot);
+  if(seg.length<4) return null;
+  let st=0,sd=0,stt=0,std=0; const nS=seg.length;
+  seg.forEach(s=>{ st+=s.t; sd+=s.db; stt+=s.t*s.t; std+=s.t*s.db; });
+  const b=(nS*std - st*sd)/(nS*stt - st*st);        // helling dB/s
+  if(!isFinite(b) || b>=-1) return null;            // moet duidelijk dalen
+  return 60/Math.abs(b);
+}
+function analyzeRt60(){
+  if(!rt60Data.length){ setText(['#rt60-status'],'Geen data.'); return; }
+  const mk = fn => rt60Data.map(d=>({t:d.t, db:fn(d.bands)}));
+  const broad= mk(bands=>10*Math.log10(bands.reduce((s,v)=>s+Math.pow(10,v/10),0)/bands.length));
+  const rb=fitRt60(broad), rl=fitRt60(mk(b=>groupDb(b,20,300))),
+        rm=fitRt60(mk(b=>groupDb(b,300,2000))), rh=fitRt60(mk(b=>groupDb(b,2000,20000)));
+  const fmt=r=> r? r.toFixed(2)+' s' : '—';
+  const vals=$('#rt60-vals');
+  if(![rb,rl,rm,rh].some(x=>x)){
+    setText(['#rt60-status'],'Geen duidelijke afval — speel pink-noise luider en stop \'m hoorbaar tijdens de opname.');
+    if(vals) vals.innerHTML=''; return;
+  }
+  setText(['#rt60-status'],'Klaar (onderbroken-ruis-schatting).');
+  if(vals) vals.innerHTML = sv('Breed', fmt(rb)) + sv('Laag', fmt(rl)) + sv('Mid', fmt(rm)) + sv('Hoog', fmt(rh));
+}
+
+/* ---------- Vocal-preset uit mic-scan ---------- */
+function renderVocalPreset(){
+  const wrap=$('#vocgen'); if(!wrap) return;
+  const src=$('#vocgen-src');
+  if(!scan.mic){
+    wrap.innerHTML='<p class="hint" style="margin:0">Doe eerst stap 3 (microfoon) op het dashboard: zing gelijkmatig in de KSM9. Dan reken ik hier concrete Ui12-startwaarden uit.</p>';
+    if(src) src.textContent=''; return;
+  }
+  const m=scan.mic, tr=trend(m), probs=[];
+  for(let i=0;i<ISO.length;i++){ if(ISO[i]>=200&&ISO[i]<=800){ const dev=m[i]-tr[i]; if(dev>=2.5) probs.push({hz:ISO[i], cut:-Math.min(3,Math.round(dev))}); } }
+  probs.sort((a,b)=>a.cut-b.cut);
+  const sib=groupDb(m,6300,9000), midref=groupDb(m,1000,4000), deess=(sib-midref)>-6;
+  let html='';
+  html+='<div class="kv"><span class="k">High-pass (HPF)</span><span class="v">90–110 Hz</span></div>';
+  if(probs.length){ probs.slice(0,2).forEach(p=>{ html+='<div class="kv"><span class="k">Cut — uit jouw scan</span><span class="v">'+p.cut.toFixed(1)+' dB @ '+fmtHz(p.hz)+' Hz</span></div>'; }); }
+  else html+='<div class="kv"><span class="k">Lage mid</span><span class="v">geen duidelijke dreun — laat vlak</span></div>';
+  html+='<div class="kv"><span class="k">Presence</span><span class="v">+1–2 dB @ 3–4 kHz</span></div>';
+  html+='<div class="kv"><span class="k">De-ess</span><span class="v">'+(deess?'aan — 6–8 kHz (sis aanwezig)':'licht/uit — weinig sis')+'</span></div>';
+  html+='<div class="kv"><span class="k">Compressor</span><span class="v">2–3:1, 3–6 dB GR</span></div>';
+  wrap.innerHTML=html;
+  if(src) src.textContent='uit mic-scan';
+}
 
 function renderSuggTable(){
   const {sugg}=suggestions();
@@ -828,6 +985,7 @@ function renderScan(){
   setText(['#dm-pos'], String(positions.length));
   setText(['#dm-res'], positions.length ? String(sugg.length) : '—');
   setText(['#dm-fb'], scan.mic ? fmtHz(ISO[argmaxBand(scan.mic,500)])+' Hz' : '—');
+  renderVocalPreset();
 }
 
 /* ---------- Sessie export / import ---------- */
