@@ -20,6 +20,7 @@
   --fg:#e8edf2; --muted:#8c99a6; --dim:#5e6a76;
   --accent:#36d1b7; --accent-2:#2aa3d6;
   --warn:#f2b23e; --bad:#ef5b5b; --good:#49c17a;
+  --violet:#8a7be6; --pink:#e86aa6; --cyan:#2cc5e0; --lime:#8bd450;
   --bar:#2aa3d6; --bar-hot:#36d1b7; --cap:#e8edf2;
   --radius:14px; --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
@@ -49,7 +50,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);
   background:transparent;border:0;color:var(--muted);font:inherit;font-size:14px;
   padding:12px 13px;border-radius:10px;cursor:pointer}
 .nav button .ic{width:20px;text-align:center;font-size:16px;opacity:.9}
-.nav button[aria-selected="true"]{background:var(--panel-2);color:var(--fg)}
+.nav button[aria-selected="true"]{background:var(--panel-2);color:var(--fg);box-shadow:inset 3px 0 0 var(--accent)}
 .nav button:active{background:var(--panel-2)}
 .statusdot{margin:10px;padding:11px 13px;background:var(--panel-2);border-radius:10px;font-size:12px;color:var(--muted)}
 .statusdot .row{display:flex;align-items:center;gap:8px;margin:3px 0}
@@ -80,11 +81,15 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);
 
 /* meters */
 .meters{display:flex;gap:12px;flex-wrap:wrap}
-.metric{flex:1;min-width:110px;background:var(--panel-2);border-radius:12px;padding:11px 13px}
+.metric{flex:1;min-width:110px;background:var(--panel-2);border-radius:12px;padding:11px 13px 11px 14px;
+  border-left:4px solid var(--mc,var(--line));position:relative;overflow:hidden}
+.metric::after{content:"";position:absolute;inset:0;background:var(--mc,transparent);opacity:.05;pointer-events:none}
 .metric .k{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--dim)}
-.metric .v{font-family:var(--mono);font-size:24px;font-variant-numeric:tabular-nums;margin-top:2px}
+.metric .v{font-family:var(--mono);font-size:24px;font-variant-numeric:tabular-nums;margin-top:2px;color:var(--mc,var(--fg))}
 .metric .u{font-size:12px;color:var(--muted)}
-.clip{color:var(--good)} .clip.hot{color:var(--bad)}
+.metric.c1{--mc:var(--accent)} .metric.c2{--mc:var(--cyan)} .metric.c3{--mc:var(--good)}
+.metric.c4{--mc:var(--violet)} .metric.c5{--mc:var(--warn)} .metric.c6{--mc:var(--pink)}
+.clip{color:var(--good)!important} .clip.hot{color:var(--bad)!important}
 
 canvas{display:block;width:100%;border-radius:10px;background:var(--panel-2);touch-action:none}
 
@@ -135,15 +140,16 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
 .dash-cols{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;align-items:start}
 .dash-col{display:flex;flex-direction:column;gap:14px;min-width:0}
 @media (max-width:900px){.dash-cols{grid-template-columns:1fr}}
-.scanstep{padding:12px 0;border-bottom:1px solid var(--line)}
+.scanstep{padding:12px 0 12px 12px;border-bottom:1px solid var(--line);border-left:3px solid var(--sc,var(--line));margin-bottom:2px}
 .scanstep:last-of-type{border-bottom:0}
+#step-install{--sc:var(--cyan)} #step-zaal{--sc:var(--accent)} #step-mic{--sc:var(--violet)}
 .scanstep-h{display:flex;align-items:center;gap:9px;font-size:14px}
-.scanstep-h b{font-weight:600}
-.scan-ic{width:22px;height:22px;border-radius:50%;background:var(--panel-2);border:1px solid var(--line);
-  display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);flex:none}
-.scanstep.done .scan-ic{background:var(--good);border-color:var(--good);color:#04231e}
+.scanstep-h b{font-weight:600;color:var(--sc)}
+.scan-ic{width:22px;height:22px;border-radius:50%;background:color-mix(in srgb,var(--sc) 20%,transparent);
+  border:1px solid var(--sc);display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:var(--sc);flex:none;font-weight:700}
+.scanstep.done .scan-ic{background:var(--sc);border-color:var(--sc);color:#061018}
 .scan-state{margin-left:auto;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--dim)}
-.scanstep.done .scan-state{color:var(--good)}
+.scanstep.done .scan-state{color:var(--sc)}
 .scanstep p.hint{margin:6px 0 8px}
 .scanvals{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .scanvals:empty{margin-top:0}
@@ -192,12 +198,12 @@ ul.steps{margin:0;padding-left:18px} ul.steps li{margin:7px 0}
       </div>
 
       <div class="meters">
-        <div class="metric"><div class="k">RMS</div><div class="v" id="dm-rms">–∞</div><div class="u">dBFS rel.</div></div>
-        <div class="metric"><div class="k">Piek</div><div class="v" id="dm-peak">–∞</div><div class="u">dBFS</div></div>
-        <div class="metric"><div class="k">Clip</div><div class="v clip" id="dm-clip">OK</div><div class="u" id="dm-sr">samplerate —</div></div>
-        <div class="metric"><div class="k">Zaalposities</div><div class="v" id="dm-pos">0</div><div class="u">vastgelegd</div></div>
-        <div class="metric"><div class="k">Resonanties</div><div class="v" id="dm-res">—</div><div class="u">boven trend</div></div>
-        <div class="metric"><div class="k">Feedback-kans</div><div class="v" id="dm-fb">—</div><div class="u">mic-scan</div></div>
+        <div class="metric c1"><div class="k">RMS</div><div class="v" id="dm-rms">–∞</div><div class="u">dBFS rel.</div></div>
+        <div class="metric c2"><div class="k">Piek</div><div class="v" id="dm-peak">–∞</div><div class="u">dBFS</div></div>
+        <div class="metric c3"><div class="k">Clip</div><div class="v clip" id="dm-clip">OK</div><div class="u" id="dm-sr">samplerate —</div></div>
+        <div class="metric c4"><div class="k">Zaalposities</div><div class="v" id="dm-pos">0</div><div class="u">vastgelegd</div></div>
+        <div class="metric c5"><div class="k">Resonanties</div><div class="v" id="dm-res">—</div><div class="u">boven trend</div></div>
+        <div class="metric c6"><div class="k">Feedback-kans</div><div class="v" id="dm-fb">—</div><div class="u">mic-scan</div></div>
       </div>
 
       <div class="dash-cols" style="margin-top:14px">
@@ -580,6 +586,8 @@ const DB_MIN=-100, DB_MAX=-6;
 const dbToY=(db,h,pad)=>{ const t=(db-DB_MIN)/(DB_MAX-DB_MIN); return h-pad - Math.max(0,Math.min(1,t))*(h-pad*1.6); };
 function cssvar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
+// Kleur per band: laag = warm (rood/oranje), mid = groen, hoog = blauw/violet.
+function bandColor(i,hot){ const t=i/(ISO.length-1); const hue=8+t*280; return 'hsl('+hue+','+(hot?92:64)+'%,'+(hot?60:53)+'%)'; }
 function drawSpectrum(){ document.querySelectorAll('canvas.js-spectrum').forEach(drawSpectrumTo); }
 function drawSpectrumTo(cv){
   const {ctx,w,h}=fitCanvas(cv);
@@ -595,7 +603,7 @@ function drawSpectrumTo(cv){
     const x=i*bw+gap/2, val=liveBands[i];
     const y=dbToY(val,h,pad), bh=(h-pad)-y;
     const hot = val>-22;
-    ctx.fillStyle = hot?cssvar('--bar-hot'):cssvar('--bar');
+    ctx.fillStyle = bandColor(i,hot);
     ctx.globalAlpha = val<=-99?0.12:1;
     roundRect(ctx,x,y,bw-gap,Math.max(1,bh),3); ctx.fill();
     ctx.globalAlpha=1;
@@ -708,8 +716,9 @@ function drawRoomTo(cv,avg,sugg){
   const bypass=anyBypass();
   const corrected = avg.map((v,i)=>{ const s=sugg.find(x=>x.i===i); return bypass? v : v+(s?s.cut:0); });
   const xOf=i=> pad + i*(w-pad*1.3)/(n-1);
-  drawCurve(ctx, avg, xOf, h, pad, cssvar('--bar'), 2, .5);
-  if(sugg.length){ drawCurve(ctx, corrected, xOf, h, pad, cssvar('--warn'), 2, 1); }
+  drawCurve(ctx, avg, xOf, h, pad, cssvar('--cyan'), 2, .55);
+  if(sugg.length){ drawCurve(ctx, corrected, xOf, h, pad, cssvar('--warn'), 2, 1);
+    ctx.fillStyle=cssvar('--bad'); sugg.forEach(s=>{ const x=xOf(s.i), y=dbToY(avg[s.i],h,pad); ctx.beginPath(); ctx.arc(x,y,3.5,0,Math.PI*2); ctx.fill(); }); }
   ctx.fillStyle=cssvar('--dim'); ctx.font='9px var(--mono)';
   for(let i=0;i<n;i+=4){ ctx.fillText(fmtHz(ISO[i]), xOf(i)-6, h-5); }
 }
